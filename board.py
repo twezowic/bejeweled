@@ -10,6 +10,8 @@ class Jewel:
     def colour(self):
         return self._colour
 
+# zmienić żeby tablica była [x][y]
+
 
 class Board:
     def __init__(self, board=None):
@@ -25,9 +27,9 @@ class Board:
 
     def create_board(self):
         board = []
-        for x in range(board_height):
+        for y in range(board_height):
             line = []
-            for y in range(board_width):
+            for x in range(board_width):
                 jewel = Jewel(choice(colors_of_jewels))
                 line.append(jewel)
             board.append(line)
@@ -39,12 +41,14 @@ class Board:
 
     def show_board(self):
         table = self.board()
-        for i in range(board_height):
-            for j in range(board_width):
-                print(table[i][j].colour())
+        for y in range(board_height):
+            line = ''
+            for x in range(board_width):
+                line += f'{table[y][x].colour()}'
+            print(line)
 
     def swap_jewels(self, position1, position2):
         x1, y1 = position1
         x2, y2 = position2
         table = self.board()
-        table[x1][y1], table[x2][y2] = table[x2][y2], table[x1][y1]
+        table[y1][x1], table[y2][x2] = table[y2][x2], table[y1][x1]
