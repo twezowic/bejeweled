@@ -15,9 +15,8 @@ def new_highscore(highscore):
 
 
 class Player:
-    def __init__(self, score=0, moves=number_of_moves):
+    def __init__(self, moves=number_of_moves):
         self._moves = moves
-        self._score = score
 
     def moves(self):
         return self._moves
@@ -27,9 +26,3 @@ class Player:
 
     def one_move(self):
         self.set_moves(self.moves()-1)
-
-    def score(self):
-        return self._score
-
-    def set_score(self, new_score):
-        self._score = new_score
