@@ -61,7 +61,7 @@ class Board:
         table = self.board()
         table[y1][x1], table[y2][x2] = table[y2][x2], table[y1][x1]
 
-    def destroying_jewels(self):
+    def destroying_jewels(self, score):
         board = self.board()
         for y in range(board_height):  # wiersze
             for x in range(board_width - 2):
@@ -78,12 +78,20 @@ class Board:
         for y in range(board_height):  # usuwanie
             for x in range(board_width):
                 if board[y][x].delete():
+                    score += 100
                     board[y][x].set_colour('white')
                     board[y][x].set_delete(False)
+        return score
 
     def falling_jewels(self):
         board = self.board()
-        for y in range(board_height-1, 0, -1):  # usuwanie
+        for y in range(board_height-1, 0, -1):
             for x in range(board_width):
                 if board[y][x].colour() == 'white':
                     self.swap_jewels((x, y), (x, y - 1))
+
+    def new_jewels(self):
+        board = self.board()
+        for x in range(board_width):
+            if board[0][x].colour() == 'white':
+                board[0][x].set_colour(choice(colors_of_jewels))
