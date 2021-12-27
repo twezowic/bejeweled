@@ -48,7 +48,6 @@ def interface(board, player):
     selected_position = []
     select = False
 
-    score = 0
     highscore = get_highscore()
 
     table = board.board()
@@ -77,7 +76,8 @@ def interface(board, player):
 
         if player.moves() > 0:
             moving(cursor_position)
-            score = board.destroying_jewels(score)
+            board.destroying_jewels(player)
+            score = player.score()
             score_text = test_font.render(f'Score: {score}', False, 'Black')
             highscore = score if highscore < score else highscore
             highscore_text = test_font.render(
@@ -102,6 +102,7 @@ def interface(board, player):
             screen.blit(score_text, (board_width*50, 10))
             screen.blit(highscore_text, (board_width*50, 60))
             screen.blit(moves_text, (board_width*50, 110))
+
             if select:
                 x, y = position_on_screen(selected_position)
                 pygame.draw.rect(

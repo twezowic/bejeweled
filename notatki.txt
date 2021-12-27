@@ -1,0 +1,12 @@
+# 1:24:34 The ultimate introduction to Pygame
+
+# Do zrobienia:
+# tworzenie planszy bez 3
+# warunek przesunięcia
+# sprawdzenie warunku i cofanie ruchu gdy nie można
+
+# Do zastanowienia się:
+# klasa gra
+# rodzaj kursora
+
+naprawić błąd w którym usuwane są klejnoty podczas spadania
