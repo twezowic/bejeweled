@@ -8,13 +8,9 @@ from config import (
 
 def interface(board):
     pygame.init()
-    screen = pygame.display.set_mode((board_width*50, board_height*50))
-    background = pygame.Surface((board_width*50, board_height*50))
-    background.fill('white')
-    screen.blit(background, (0, 0))
-
-    clock = pygame.time.Clock()
+    screen = pygame.display.set_mode((board_width*50+10, board_height*50+10))
     pygame.display.set_caption('Bejeweled')
+    clock = pygame.time.Clock()
 
     cursor = pygame.Surface((5, 5))
     cursor.fill('white')
@@ -28,35 +24,43 @@ def interface(board):
 
     while True:
         for event in pygame.event.get():
+
+            # zamiana klejnotow
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    print('space')
-                    print(selected_position)
-                    print(cursor_position_in_table)
                     if select is False:
                         select = True
                         selected_position = tuple(cursor_position_in_table)
-                        print(selected_position)
                     elif selected_position != tuple(cursor_position_in_table):
-                        print('x')
                         select = False
-                        board.swap_jewels((
+                        board.swap_jewels(
                             selected_position,
-                            cursor_position_in_table)
+                            cursor_position_in_table
                             )
+
+            # zamykanie okna
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
 
+        screen.fill('white')
+
+        # rysowanie klejnotow
         for y in range(board_height):
             for x in range(board_width):
-                pygame.draw.ellipse((
+                pygame.draw.ellipse(
                     screen,
                     table[y][x].colour(),
-                    pygame.Rect(x*50, y*50, 50, 50))
+                    pygame.Rect(x*50+10, y*50+10, 40, 40)
                     )
+        # rysowanie ramki wokol wybranego klejnotu
+        if select:
+            x, y = selected_position
+            x *= 50
+            y *= 50
+            pygame.draw.rect(screen, 'red', pygame.Rect(x+5, y+5, 50, 50), 5)
 
-        pygame.key.set_repeat(0, 1000)
+        # poruszanie sie strzalkami
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RIGHT]:
             if cursor_position[0] != board_width * 50 - 25:
@@ -76,5 +80,6 @@ def interface(board):
                 cursor_position[1] -= 50
         screen.blit(cursor, (cursor_position))
 
+        # odswierzanie ekranu
         pygame.display.update()
-        clock.tick(30)
+        clock.tick(15)
