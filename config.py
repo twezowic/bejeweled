@@ -1,9 +1,10 @@
 from colorsys import hls_to_rgb
 from math import floor
 
-board_width = 20  # min 3
+board_width = 8  # min 3
 board_height = 8  # min 3
-number_of_jewels = 5
+number_of_jewels = 6
+number_of_moves = 10
 
 
 def choose_colors(number_of_colors):
