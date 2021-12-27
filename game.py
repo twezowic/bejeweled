@@ -2,8 +2,11 @@ from config import number_of_moves
 
 
 def get_highscore():
-    with open('highscore.txt', 'r') as file_handle:
-        return int(file_handle.readline())
+    try:
+        with open('highscore.txt', 'r') as file_handle:
+            return int(file_handle.readline())
+    except FileNotFoundError:
+        return 0
 
 
 def new_highscore(highscore):
