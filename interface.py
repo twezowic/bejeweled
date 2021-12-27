@@ -1,6 +1,6 @@
 import pygame
-import time
 from sys import exit
+from game import get_highscore, new_highscore
 from config import (
     board_height,
     board_width,
@@ -34,11 +34,12 @@ def moving(cursor_position):
         cursor_position[1] -= 1
 
 
-def interface(board):
+def interface(board, player):
     pygame.init()
     screen = pygame.display.set_mode((board_width*50+110, board_height*50+10))
     pygame.display.set_caption('Bejeweled')
     clock = pygame.time.Clock()
+    test_font = pygame.font.Font(None, 16)  # czcionka, rozmiar
 
     cursor = pygame.Surface((5, 5))
     cursor.fill('black')
@@ -47,14 +48,13 @@ def interface(board):
     selected_position = []
     select = False
 
+    score = 0
+    highscore = get_highscore()
+
     table = board.board()
 
     while True:
-        moving(cursor_position)
-        board.destroying_jewels()
-
         for event in pygame.event.get():
-
             # zamiana klejnotow
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
@@ -64,34 +64,55 @@ def interface(board):
                     elif selected_position != tuple(cursor_position):
                         select = False
                         if adjacent(selected_position, cursor_position):
+                            player.one_move()
                             board.swap_jewels(
                                 selected_position,
                                 cursor_position
                                 )
-
             # zamykanie okna
             if event.type == pygame.QUIT:
                 pygame.quit()
+                new_highscore(highscore)
                 exit()
 
-        screen.fill('bisque')
+        if player.moves() > 0:
+            moving(cursor_position)
+            score = board.destroying_jewels(score)
+            score_text = test_font.render(f'Score: {score}', False, 'Black')
+            highscore = score if highscore < score else highscore
+            highscore_text = test_font.render(
+                f'Highscore: {highscore}',
+                False,
+                'Black'
+                )
+            moves = player.moves()
+            moves_text = test_font.render(f'Moves: {moves}', False, 'Black')
+            board.falling_jewels()
+            board.new_jewels()
 
-        # rysowanie klejnotow
-        for y in range(board_height):
-            for x in range(board_width):
-                pygame.draw.ellipse(
+            screen.fill('bisque')
+            for y in range(board_height):
+                for x in range(board_width):
+                    pygame.draw.ellipse(
+                        screen,
+                        table[y][x].colour(),
+                        pygame.Rect(x*50+10, y*50+10, 40, 40)
+                        )
+            screen.blit(cursor, (position_on_screen(cursor_position)))
+            screen.blit(score_text, (board_width*50, 10))
+            screen.blit(highscore_text, (board_width*50, 60))
+            screen.blit(moves_text, (board_width*50, 110))
+            if select:
+                x, y = position_on_screen(selected_position)
+                pygame.draw.rect(
                     screen,
-                    table[y][x].colour(),
-                    pygame.Rect(x*50+10, y*50+10, 40, 40)
+                    'red',
+                    pygame.Rect(x-20, y-20, 50, 50),
+                    5
                     )
 
-        screen.blit(cursor, (position_on_screen(cursor_position)))
-
-        # rysowanie ramki wokol wybranego klejnotu
-        if select:
-            x, y = position_on_screen(selected_position)
-            pygame.draw.rect(screen, 'red', pygame.Rect(x-20, y-20, 50, 50), 5)
-
+        else:
+            screen.fill('red')
         # odswierzanie ekranu
         pygame.display.update()
-        clock.tick(15)
+        clock.tick(10)
