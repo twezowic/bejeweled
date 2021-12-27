@@ -23,9 +23,6 @@ class Jewel:
     def __eq__(self, other) -> bool:
         return self.colour() == other.colour()
 
-    def __str__(self) -> str:
-        return f'{self.colour()}'
-
 
 class Board:
     def __init__(self, board=None):
@@ -83,3 +80,10 @@ class Board:
                 if board[y][x].delete():
                     board[y][x].set_colour('white')
                     board[y][x].set_delete(False)
+
+    def falling_jewels(self):
+        board = self.board()
+        for y in range(board_height-1, 0, -1):  # usuwanie
+            for x in range(board_width):
+                if board[y][x].colour() == 'white':
+                    self.swap_jewels((x, y), (x, y - 1))
