@@ -4,13 +4,15 @@ from random import choice
 
 
 class Jewel:
-    def __init__(self, colour):
+    def __init__(self, colour, special=False):
         self._colour = colour
+        self._special = special
 
     def colour(self):
         return self._colour
 
-# zmienić żeby tablica była [x][y]
+    def special(self):
+        return self._special
 
 
 class Board:
