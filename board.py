@@ -11,14 +11,14 @@ class Jewel:
     def colour(self):
         return self._colour
 
+    def set_colour(self, new_colour):
+        self._colour = new_colour
+
     def delete(self):
         return self._delete
 
     def set_delete(self, new_delete):
         self._delete = new_delete
-
-    def set_colour(self, new_colour):
-        self._colour = new_colour
 
     def __eq__(self, other) -> bool:
         return self.colour() == other.colour()
@@ -55,14 +55,33 @@ class Board:
                 line += f'{table[y][x].colour()}'
             print(line)
 
+    def destroying_move(self):
+        board = self.board()
+        for y in range(board_height):  # wiersze
+            for x in range(board_width - 2):
+                three = board[y, x:x+3]
+                if three[0] == three[1] == three[2]:
+                    return True
+        for x in range(board_width):  # kolumny
+            for y in range(board_height - 2):
+                three = board[y:y+3, x]
+                if three[0] == three[1] == three[2]:
+                    return True
+        return False
+
+    def setup_board(self):
+        while self.destroying_move():
+            self.destroying_jewels()
+            self.jewel_refill()
+
     def swap_jewels(self, position1, position2):
         x1, y1 = position1
         x2, y2 = position2
         table = self.board()
         table[y1][x1], table[y2][x2] = table[y2][x2], table[y1][x1]
 
-    def destroying_jewels(self, player):
-        score = player.score()
+    def destroying_jewels(self):
+        score = 0
         board = self.board()
         for y in range(board_height):  # wiersze
             for x in range(board_width - 2):
@@ -79,10 +98,11 @@ class Board:
         for y in range(board_height):  # usuwanie
             for x in range(board_width):
                 if board[y][x].delete():
+                    # print(f'x: {x}, y:{y}\n')
                     score += 100
                     board[y][x].set_colour('white')
                     board[y][x].set_delete(False)
-        player.set_score(score)
+        return score
 
     def falling_jewels(self):
         board = self.board()
@@ -96,3 +116,16 @@ class Board:
         for x in range(board_width):
             if board[0][x].colour() == 'white':
                 board[0][x].set_colour(choice(colors_of_jewels))
+
+    def is_blank(self):
+        board = self.board()
+        for y in range(board_height):
+            for x in range(board_width):
+                if board[y][x].colour() == 'white':
+                    return True
+        return False
+
+    def jewel_refill(self):
+        while self.is_blank():
+            self.falling_jewels()
+            self.new_jewels()
