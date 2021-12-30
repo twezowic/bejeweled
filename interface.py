@@ -1,5 +1,7 @@
+from numpy import cumproduct
 import pygame
 from sys import exit
+from time import sleep
 from game import get_highscore, new_highscore
 from config import (
     board_height,
@@ -40,6 +42,9 @@ def interface(board, player):
     pygame.display.set_caption('Bejeweled')
     clock = pygame.time.Clock()
     test_font = pygame.font.Font(None, 16)  # czcionka, rozmiar
+    error_font = pygame.font.Font(None, 24)
+
+    error_time = -2000
 
     cursor = pygame.Surface((5, 5))
     cursor.fill('black')
@@ -52,6 +57,8 @@ def interface(board, player):
 
     table = board.board()
 
+    invalid_move_text = error_font.render('Invalid move', False, 'Red')
+
     while True:
         for event in pygame.event.get():
             # zamiana klejnotow
@@ -63,11 +70,18 @@ def interface(board, player):
                     elif selected_position != tuple(cursor_position):
                         select = False
                         if adjacent(selected_position, cursor_position):
-                            player.one_move()
                             board.swap_jewels(
                                 selected_position,
                                 cursor_position
                                 )
+                            if not board.destroying_move():
+                                board.swap_jewels(
+                                    selected_position,
+                                    cursor_position
+                                    )
+                                error_time = pygame.time.get_ticks()
+                            else:
+                                player.one_move()
             # zamykanie okna
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -75,8 +89,6 @@ def interface(board, player):
                 exit()
 
         if player.moves() > 0:
-            moving(cursor_position)
-            board.destroying_jewels(player)
             score = player.score()
             score_text = test_font.render(f'Score: {score}', False, 'Black')
             highscore = score if highscore < score else highscore
@@ -85,10 +97,13 @@ def interface(board, player):
                 False,
                 'Black'
                 )
+            moving(cursor_position)
+            player.set_score(score + board.destroying_jewels())
             moves = player.moves()
             moves_text = test_font.render(f'Moves: {moves}', False, 'Black')
-            board.falling_jewels()
-            board.new_jewels()
+            board.jewel_refill()
+
+            current_time = pygame.time.get_ticks()
 
             screen.fill('bisque')
             for y in range(board_height):
@@ -102,6 +117,9 @@ def interface(board, player):
             screen.blit(score_text, (board_width*50, 10))
             screen.blit(highscore_text, (board_width*50, 60))
             screen.blit(moves_text, (board_width*50, 110))
+            print(f'{current_time}, {error_time}')
+            if current_time - error_time < 2000:
+                screen.blit(invalid_move_text, (board_width*50, 160))
 
             if select:
                 x, y = position_on_screen(selected_position)
