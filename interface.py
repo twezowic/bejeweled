@@ -38,13 +38,25 @@ def moving(cursor_position):
 
 def interface(board, player):
     pygame.init()
-    screen = pygame.display.set_mode((board_width*50+110, board_height*50+10))
+    SCREEN_WIDTH = board_width*50+110
+    SCREEN_HEIGHT = board_height*50+10
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption('Bejeweled')
     clock = pygame.time.Clock()
-    test_font = pygame.font.Font(None, 16)  # czcionka, rozmiar
-    error_font = pygame.font.Font(None, 24)
+    font = pygame.font.Font('OpenSans.ttf', 12)
+    font_begin = pygame.font.Font('OpenSans.ttf', 32)
+
+
+    jewel = pygame.image.load('jewel.png')
+    jewel_rect = jewel.get_rect(center = (SCREEN_WIDTH/2, 128))
+    begin_info = font_begin.render('Press space to start the game', True, 'Blue')
+    begin_info_rect = begin_info.get_rect(center=(SCREEN_WIDTH/2, (SCREEN_HEIGHT + 256) / 2))
+
+    pygame.display.set_icon(jewel)
 
     error_time = -2000
+
+    title_screen = True
 
     cursor = pygame.Surface((5, 5))
     cursor.fill('black')
@@ -57,55 +69,64 @@ def interface(board, player):
 
     table = board.board()
 
-    invalid_move_text = error_font.render('Invalid move', False, 'Red')
+    invalid_move_text = font.render('Invalid move', False, 'Red')
 
     while True:
         for event in pygame.event.get():
-            # zamiana klejnotow
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    if select is False:
-                        select = True
-                        selected_position = tuple(cursor_position)
-                    elif selected_position != tuple(cursor_position):
-                        select = False
-                        if adjacent(selected_position, cursor_position):
-                            board.swap_jewels(
-                                selected_position,
-                                cursor_position
-                                )
-                            if not board.destroying_move():
+                    if title_screen:
+                        title_screen = False
+                    else:
+                        # zamiana klejnotow
+                        if select is False:
+                            select = True
+                            selected_position = tuple(cursor_position)
+                        elif selected_position != tuple(cursor_position):
+                            select = False
+                            if adjacent(selected_position, cursor_position):
                                 board.swap_jewels(
                                     selected_position,
                                     cursor_position
                                     )
-                                error_time = pygame.time.get_ticks()
-                            else:
-                                player.one_move()
+                                if not board.destroying_move():
+                                    board.swap_jewels(
+                                        selected_position,
+                                        cursor_position
+                                        )
+                                    error_time = pygame.time.get_ticks()
+                                else:
+                                    player.one_move()
+                if event.key == pygame.K_h:
+                    print('help')
+                if event.key == pygame.K_l:
+                    print('leaderboard')
             # zamykanie okna
             if event.type == pygame.QUIT:
                 pygame.quit()
                 new_highscore(highscore)
                 exit()
-
-        if player.moves() > 0:
+        screen.fill('bisque')
+        if title_screen:
+            screen.blit(jewel, jewel_rect)
+            screen.blit(begin_info, begin_info_rect)
+        elif player.moves() > 0:
             score = player.score()
-            score_text = test_font.render(f'Score: {score}', False, 'Black')
+            score_text = font.render(f'Score: {score}', True, 'Black')
             highscore = score if highscore < score else highscore
-            highscore_text = test_font.render(
+            highscore_text = font.render(
                 f'Highscore: {highscore}',
-                False,
+                True,
                 'Black'
                 )
             moving(cursor_position)
             player.set_score(score + board.destroying_jewels())
             moves = player.moves()
-            moves_text = test_font.render(f'Moves: {moves}', False, 'Black')
+            moves_text = font.render(f'Moves: {moves}', True, 'Black')
             board.jewel_refill()
 
             current_time = pygame.time.get_ticks()
 
-            screen.fill('bisque')
             for y in range(board_height):
                 for x in range(board_width):
                     pygame.draw.ellipse(
@@ -117,7 +138,6 @@ def interface(board, player):
             screen.blit(score_text, (board_width*50, 10))
             screen.blit(highscore_text, (board_width*50, 60))
             screen.blit(moves_text, (board_width*50, 110))
-            print(f'{current_time}, {error_time}')
             if current_time - error_time < 2000:
                 screen.blit(invalid_move_text, (board_width*50, 160))
 
@@ -131,7 +151,7 @@ def interface(board, player):
                     )
 
         else:
-            screen.fill('red')
+            title_screen = True
         # odswierzanie ekranu
         pygame.display.update()
         clock.tick(10)
