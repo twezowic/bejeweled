@@ -1,14 +1,16 @@
 from interface import interface
 from board import Board
-from game import Player
+from game import Game, Leadeboard
 
 
 def main():
     board = Board()
-    player = Player()
+    game = Game()
+    leaderboard = Leadeboard()
+    leaderboard.get_from_json()
     board.create_board()
     board.setup_board()
-    interface(board, player)
+    interface(board, game, leaderboard)
 
 
 if __name__ == '__main__':
