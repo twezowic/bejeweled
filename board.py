@@ -1,6 +1,7 @@
 from config import board_width, board_height, colors_of_jewels
 from random import choice
 from numpy import array
+from time import sleep
 
 
 class Jewel:
@@ -72,7 +73,9 @@ class Board:
     def setup_board(self):
         while self.destroying_move():
             self.destroying_jewels()
-            self.jewel_refill()
+            while self.is_blank():
+                self.falling_jewels()
+                self.new_jewels()
 
     def swap_jewels(self, position1, position2):
         x1, y1 = position1
@@ -82,26 +85,26 @@ class Board:
 
     def destroying_jewels(self):
         score = 0
-        board = self.board()
-        for y in range(board_height):  # wiersze
-            for x in range(board_width - 2):
-                three = board[y, x:x+3]
-                if three[0] == three[1] == three[2]:
-                    for element in range(3):
-                        board[y][x+element].set_delete(True)
-        for x in range(board_width):  # kolumny
-            for y in range(board_height - 2):
-                three = board[y:y+3, x]
-                if three[0] == three[1] == three[2]:
-                    for element in range(3):
-                        board[y+element][x].set_delete(True)
-        for y in range(board_height):  # usuwanie
-            for x in range(board_width):
-                if board[y][x].delete():
-                    # print(f'x: {x}, y:{y}\n')
-                    score += 100
-                    board[y][x].set_colour('white')
-                    board[y][x].set_delete(False)
+        if not self.is_blank():
+            board = self.board()
+            for y in range(board_height):  # wiersze
+                for x in range(board_width - 2):
+                    three = board[y, x:x+3]
+                    if three[0] == three[1] == three[2] and three[0].colour() != 'white':
+                        for element in range(3):
+                            board[y][x+element].set_delete(True)
+            for x in range(board_width):  # kolumny
+                for y in range(board_height - 2):
+                    three = board[y:y+3, x]
+                    if three[0] == three[1] == three[2] and three[0].colour() != 'white':
+                        for element in range(3):
+                            board[y+element][x].set_delete(True)
+            for y in range(board_height):  # usuwanie
+                for x in range(board_width):
+                    if board[y][x].delete():
+                        score += 100
+                        board[y][x].set_colour('white')
+                        board[y][x].set_delete(False)
         return score
 
     def falling_jewels(self):
@@ -126,6 +129,24 @@ class Board:
         return False
 
     def jewel_refill(self):
-        while self.is_blank():
+        if self.is_blank():
             self.falling_jewels()
             self.new_jewels()
+            sleep(0.75)
+
+    def game_over(self):
+        for y in range(board_height):  # wiersze
+            for x in range(board_width - 1):
+                self.swap_jewels((x, y), (x+1, y))
+                if self.destroying_move():
+                    self.swap_jewels((x, y), (x+1, y))
+                    return False
+                self.swap_jewels((x, y), (x+1, y))
+        for x in range(board_width):  # kolumny
+            for y in range(board_height - 1):
+                self.swap_jewels((x, y), (x, y+1))
+                if self.destroying_move():
+                    self.swap_jewels((x, y), (x+1, y))
+                    return False
+                self.swap_jewels((x, y), (x, y+1))
+        return True
