@@ -1,7 +1,5 @@
-from numpy import cumproduct
 import pygame
 from sys import exit
-from time import sleep
 from game import get_highscore, new_highscore
 from config import (
     board_height,
@@ -36,30 +34,43 @@ def moving(cursor_position):
         cursor_position[1] -= 1
 
 
-def interface(board, player):
+def interface(board, game):
     pygame.init()
     SCREEN_WIDTH = board_width*50+110
     SCREEN_HEIGHT = board_height*50+10
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption('Bejeweled')
     clock = pygame.time.Clock()
-    font = pygame.font.Font('OpenSans.ttf', 12)
-    font_begin = pygame.font.Font('OpenSans.ttf', 32)
 
+    font = pygame.font.Font('OpenSans.ttf', 12)
+    font_title = pygame.font.Font('OpenSans.ttf', 32)
 
     jewel = pygame.image.load('jewel.png')
-    jewel_rect = jewel.get_rect(center = (SCREEN_WIDTH/2, 128))
-    begin_info = font_begin.render('Press space to start the game', True, 'Blue')
-    begin_info_rect = begin_info.get_rect(center=(SCREEN_WIDTH/2, (SCREEN_HEIGHT + 256) / 2))
+    jewel_rect = jewel.get_rect(center=(SCREEN_WIDTH/2, 128))
+
+    begin_info = font_title.render(
+        'Press space to start the game',
+        True,
+        'Blue'
+        )
+    begin_info_rect = begin_info.get_rect(center=(
+        SCREEN_WIDTH/2,
+        (SCREEN_HEIGHT + 256) / 2)
+        )
+
+    invalid_move_text = font.render('Invalid move', True, 'Red')
+    ending_text = font.render('Game over', True, 'Red')
+    ending_text_rect = ending_text.get_rect(center=(
+        SCREEN_WIDTH/2,
+        SCREEN_HEIGHT/2
+        ))
+
+    player_name = ''
 
     pygame.display.set_icon(jewel)
 
-    error_time = -2000
+    error_time = -1000
 
-    title_screen = True
-
-    cursor = pygame.Surface((5, 5))
-    cursor.fill('black')
     cursor_position = [0, 0]
 
     selected_position = []
@@ -69,15 +80,30 @@ def interface(board, player):
 
     table = board.board()
 
-    invalid_move_text = font.render('Invalid move', False, 'Red')
+    title_screen = True
+    menu = False
+    ending = False
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    if title_screen:
+                if title_screen:
+                    if event.key == pygame.K_SPACE:
                         title_screen = False
+                        menu = True
+                elif menu:
+                    if event.key == pygame.K_BACKSPACE:
+                        player_name = player_name[:-1]
+                    elif event.key == pygame.K_SPACE:
+                        menu = False
                     else:
+                        player_name += event.unicode
+                elif ending:
+                    if event.key == pygame.K_SPACE:
+                        title_screen = True
+                        ending = False
+                else:
+                    if event.key == pygame.K_SPACE:
                         # zamiana klejnotow
                         if select is False:
                             select = True
@@ -96,37 +122,67 @@ def interface(board, player):
                                         )
                                     error_time = pygame.time.get_ticks()
                                 else:
-                                    player.one_move()
-                if event.key == pygame.K_h:
-                    print('help')
-                if event.key == pygame.K_l:
-                    print('leaderboard')
+                                    game.one_move()
+                            else:
+                                error_time = pygame.time.get_ticks()
             # zamykanie okna
             if event.type == pygame.QUIT:
                 pygame.quit()
                 new_highscore(highscore)
                 exit()
+
         screen.fill('bisque')
+
         if title_screen:
             screen.blit(jewel, jewel_rect)
             screen.blit(begin_info, begin_info_rect)
-        elif player.moves() > 0:
-            score = player.score()
-            score_text = font.render(f'Score: {score}', True, 'Black')
+
+        elif menu:
+            name_text = font.render(player_name, True, 'black')
+            name_text_rect = name_text.get_rect(center=(
+                SCREEN_WIDTH/2,
+                SCREEN_HEIGHT/2
+            ))
+            screen.blit(name_text, name_text_rect)
+
+        elif ending:
+            screen.blit(ending_text, ending_text_rect)
+
+        elif game.moves() > 0:
+            # przygotowanie tekstu
+            score = game.score()
+            score_text = font.render(
+                f'Score: {score}',
+                True,
+                'Black'
+                )
+
             highscore = score if highscore < score else highscore
             highscore_text = font.render(
                 f'Highscore: {highscore}',
                 True,
                 'Black'
                 )
+
+            moves = game.moves()
+            moves_text = font.render(
+                f'Moves: {moves}',
+                True,
+                'Black'
+                )
+
+            # ruchy
             moving(cursor_position)
-            player.set_score(score + board.destroying_jewels())
-            moves = player.moves()
-            moves_text = font.render(f'Moves: {moves}', True, 'Black')
+
+            # automatyczne działania na planszy
+            if board.game_over():
+                ending = True
             board.jewel_refill()
+            game.set_score(score + board.destroying_jewels())
 
             current_time = pygame.time.get_ticks()
 
+            # rysowanie
             for y in range(board_height):
                 for x in range(board_width):
                     pygame.draw.ellipse(
@@ -134,11 +190,12 @@ def interface(board, player):
                         table[y][x].colour(),
                         pygame.Rect(x*50+10, y*50+10, 40, 40)
                         )
-            screen.blit(cursor, (position_on_screen(cursor_position)))
+            x, y = position_on_screen(cursor_position)
+            pygame.draw.ellipse(screen, 'black', pygame.Rect(x, y, 5, 5))
             screen.blit(score_text, (board_width*50, 10))
             screen.blit(highscore_text, (board_width*50, 60))
             screen.blit(moves_text, (board_width*50, 110))
-            if current_time - error_time < 2000:
+            if current_time - error_time < 1000:
                 screen.blit(invalid_move_text, (board_width*50, 160))
 
             if select:
@@ -149,9 +206,8 @@ def interface(board, player):
                     pygame.Rect(x-20, y-20, 50, 50),
                     5
                     )
-
         else:
-            title_screen = True
-        # odswierzanie ekranu
+            ending = True
+
         pygame.display.update()
         clock.tick(10)
