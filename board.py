@@ -134,7 +134,9 @@ class Board:
             self.new_jewels()
             sleep(0.75)
 
-    def game_over(self):
+    def game_over(self, number_of_moves):
+        if number_of_moves == 0:
+            return True
         for y in range(board_height):  # wiersze
             for x in range(board_width - 1):
                 self.swap_jewels((x, y), (x+1, y))
