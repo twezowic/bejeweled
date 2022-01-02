@@ -2,19 +2,6 @@ from config import number_of_moves
 import json
 
 
-def get_highscore():
-    try:
-        with open('highscore.txt', 'r') as file_handle:
-            return int(file_handle.readline())
-    except FileNotFoundError:
-        return 0
-
-
-def new_highscore(highscore):
-    with open('highscore.txt', 'w') as file_handle:
-        file_handle.writelines(f'{highscore}')
-
-
 class Score:
     def __init__(self, name, score):
         self._name = name
@@ -28,7 +15,9 @@ class Score:
 
 
 class Leadeboard:
-    def __init__(self, scores):
+    def __init__(self, scores=None):
+        if scores is None:
+            scores = []
         self._scores = scores
 
     def scores(self):
@@ -38,19 +27,23 @@ class Leadeboard:
         self._scores = new_scores
 
     def get_from_json(self):
-        with open('leaderboard.json', 'r') as file_handle:
-            leadeboard = []
-            data = json.load(file_handle)
-            for element in data:
-                name = element['name']
-                score = element['score']
-                leadeboard.append(Score(name, score))
-        return Leadeboard(leadeboard)
+        try:
+            with open('leaderboard.json', 'r') as file_handle:
+                leadeboard = []
+                data = json.load(file_handle)
+                for element in data:
+                    name = element['name']
+                    score = element['score']
+                    leadeboard.append(Score(name, score))
+            self.set_scores(leadeboard)
+        except FileNotFoundError:
+            return None
 
     def set_to_json(self):
         with open('leaderboard.json', 'w') as file_handle:
             data = []
-            for element in self.scores():
+            leadeboard = self.scores()
+            for element in leadeboard:
                 name = element.name()
                 score = element.score()
                 score_data = {
@@ -69,12 +62,18 @@ class Leadeboard:
 
     def adding_new_score(self, new_score):
         leadeboard = self.scores()
-        new_leaderboard = []
-        for data in leadeboard:
-            if new_score.score() > data.score():
-                new_leaderboard.append(new_score)
-            new_leaderboard.append(data)
-        self.set_scores(new_leaderboard[0:9])
+        if not leadeboard:
+            self.set_scores([new_score])
+        else:
+            leadeboard.append(new_score)
+            leadeboard.sort(key=lambda score: score.score(), reverse=True)
+            if len(leadeboard) > 10:
+                self.set_scores(leadeboard[:9])
+
+    def get_highscore(self):
+        if not self.scores():
+            return 0
+        return self.scores()[0].score()
 
 
 class Game:
