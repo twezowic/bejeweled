@@ -135,6 +135,8 @@ class Board:
             sleep(0.75)
 
     def game_over(self, number_of_moves):
+        if self.is_blank():
+            return False
         if number_of_moves == 0:
             return True
         for y in range(board_height):  # wiersze
