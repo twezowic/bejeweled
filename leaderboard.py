@@ -2,15 +2,26 @@ import json
 
 
 class Score:
-    def __init__(self, name, score):
+    def __init__(self, name=None, score=0):
+        if name is None:
+            name = ''
         self._name = name
         self._score = score
 
     def name(self):
         return self._name
 
+    def add_letter(self, letter):
+        self._name = self.name() + letter
+
+    def delete_letter(self):
+        self._name = self.name()[:-1]
+
     def score(self):
         return self._score
+
+    def add_score(self, score_to_add):
+        self._score = self.score() + score_to_add
 
 
 class Leadeboard:
@@ -25,7 +36,7 @@ class Leadeboard:
     def set_scores(self, new_scores):
         self._scores = new_scores
 
-    def get_from_json(self):
+    def load(self):
         try:
             with open('leaderboard.json', 'r') as file_handle:
                 leadeboard = []
@@ -38,7 +49,7 @@ class Leadeboard:
         except FileNotFoundError:
             return None
 
-    def set_to_json(self):
+    def save(self):
         with open('leaderboard.json', 'w') as file_handle:
             data = []
             leadeboard = self.scores()
