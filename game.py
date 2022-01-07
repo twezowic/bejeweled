@@ -39,7 +39,7 @@ class Game:
         self._highscore = new_highscore
 
     def reset(self, board):
-        board.setup_board(self)
+        board.setup_board()
         self.set_moves(number_of_moves)
         self._score = Score()
         self._normal_mode = True
