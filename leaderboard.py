@@ -23,6 +23,14 @@ class Score:
     def add_score(self, score_to_add):
         self._score = self.score() + score_to_add
 
+    def __str__(self) -> str:
+        return f'{self.name():10} {self.score()}'
+
+    def __eq__(self, other) -> bool:
+        cond1 = self.name() == other.name()
+        cond2 = self.score() == other.score()
+        return cond1 and cond2
+
 
 class Leadeboard:
     def __init__(self, scores=None):
@@ -36,9 +44,9 @@ class Leadeboard:
     def set_scores(self, new_scores):
         self._scores = new_scores
 
-    def load(self):
+    def load_endless(self):
         try:
-            with open('leaderboard.json', 'r') as file_handle:
+            with open('leaderboard_endless.json', 'r') as file_handle:
                 leadeboard = []
                 data = json.load(file_handle)
                 for element in data:
@@ -49,8 +57,8 @@ class Leadeboard:
         except FileNotFoundError:
             return None
 
-    def save(self):
-        with open('leaderboard.json', 'w') as file_handle:
+    def save_endless(self):
+        with open('leaderboard_endless.json', 'w') as file_handle:
             data = []
             leadeboard = self.scores()
             for element in leadeboard:
@@ -70,8 +78,7 @@ class Leadeboard:
             result += f'{index}. Player: {score.name()} {score.score()}\n'
         return result
 
-    def adding_new_score(self, player_name, score):
-        new_score = Score(player_name, score)
+    def adding_new_score(self, new_score):
         leadeboard = self.scores()
         if not leadeboard:
             self.set_scores([new_score])
@@ -79,7 +86,7 @@ class Leadeboard:
             leadeboard.append(new_score)
             leadeboard.sort(key=lambda score: score.score(), reverse=True)
             if len(leadeboard) > 10:
-                self.set_scores(leadeboard[:9])
+                self.set_scores(leadeboard[:10])
 
     def get_highscore(self):
         if not self.scores():
