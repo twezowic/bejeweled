@@ -2,17 +2,36 @@ from config import number_of_moves
 from leaderboard import Score
 
 
-class Game:
+class Level:
     def __init__(
             self,
-            score=Score(),
-            moves=number_of_moves,
             normal_mode=True,
-            highscore=0):
-        self._moves = moves
-        self._score = score
+            which_level=1,
+            goal=800,
+            moves=number_of_moves):
         self._normal_mode = normal_mode
-        self._highscore = highscore
+        self._level = which_level
+        self._goal = goal
+        self._moves = moves
+
+    def normal_mode(self):
+        return self._normal_mode
+
+    def change_normal_mode(self):
+        self._normal_mode = not self.normal_mode()
+
+    def level(self):
+        return self._level
+
+    def next_level(self):
+        self._level += 1
+        self.add_to_goal(200)
+
+    def goal(self):
+        return self._goal
+
+    def add_to_goal(self, added_goal):
+        self._goal += added_goal
 
     def moves(self):
         return self._moves
@@ -23,14 +42,25 @@ class Game:
     def one_move(self):
         self.set_moves(self.moves()-1)
 
+    def win_condition(self, score):
+        return score >= self.goal()
+
+
+class Game:
+    def __init__(
+            self,
+            score=Score(),
+            level=Level(),
+            highscore=0):
+        self._score = score
+        self._level = level
+        self._highscore = highscore
+
+    def level(self):
+        return self._level
+
     def score(self):
         return self._score
-
-    def normal_mode(self):
-        return self._normal_mode
-
-    def change_normal_mode(self):
-        self._normal_mode = not self.normal_mode()
 
     def highscore(self):
         return self._highscore
@@ -40,11 +70,5 @@ class Game:
 
     def reset(self, board):
         board.setup_board()
-        self.set_moves(number_of_moves)
         self._score = Score()
-        self._normal_mode = True
-
-
-class Level:
-    def __init__(self) -> None:
-        pass
+        self._level = Level()
