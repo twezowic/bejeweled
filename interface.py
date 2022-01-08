@@ -26,8 +26,10 @@ def interface(board, game, leaderboard):
 
     while True:
         current_time = pygame.time.get_ticks()
+
         if game_screen.active():
             game_screen.automatic(board, game)
+
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if title_screen.active():
@@ -75,7 +77,7 @@ def interface(board, game, leaderboard):
             game_screen.draw(screen, font, game, current_time, board)
 
         elif ending_screen.active():
-            ending_screen.draw(screen, font_title)
+            ending_screen.draw(screen, font_title, leaderboard, game)
 
         pygame.display.update()
         clock.tick(30)
