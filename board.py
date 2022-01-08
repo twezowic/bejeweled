@@ -160,16 +160,13 @@ class Board:
         return False
 
     def jewel_refill(self):
-        if self.is_blank():
-            self.falling_jewels()
-            self.new_jewels()
-            return True
-        return False
+        self.falling_jewels()
+        self.new_jewels()
 
-    def game_over(self, number_of_moves):
+    def game_over(self, number_of_moves, normal_mode):
         if self.is_blank():
             return False
-        if number_of_moves == 0:
+        if number_of_moves == 0 and normal_mode:
             return True
         for y in range(board_height):  # wiersze
             for x in range(board_width - 1):
