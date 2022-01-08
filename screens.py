@@ -88,7 +88,7 @@ class MenuScreen(ScreenMode):
                 self.change_active()
                 gamescreen.change_active()
             elif event.key == pygame.K_DOWN or event.key == pygame.K_UP:
-                game.change_normal_mode()
+                game.level().change_normal_mode()
 
     def draw(self, screen, font, game):
         self.background(screen)
@@ -139,7 +139,7 @@ class MenuScreen(ScreenMode):
             screen.blit(mode_info, mode_info_rect)
             screen.blit(normal_info, normal_info_rect)
             screen.blit(endless_info, endless_info_rect)
-            if game.normal_mode():
+            if game.level().normal_mode():
                 position = (
                     SCREEN_WIDTH/2-40,
                     70,
@@ -211,8 +211,8 @@ class GameScreen(ScreenMode):
     def is_game_over(self):
         return self._is_game_over
 
-    def set_is_game_over(self, new_is_game_over):
-        self._is_game_over = new_is_game_over
+    def change_is_game_over(self):
+        self._is_game_over = not self.is_game_over()
 
     def key_function(self, event, game, board, leaderboard, ending_screen):
         if not self.is_game_over():
@@ -234,7 +234,7 @@ class GameScreen(ScreenMode):
                                 )
                             self.set_error_time(pygame.time.get_ticks())
                         else:
-                            game.one_move()
+                            game.level().one_move()
                     else:
                         self.set_error_time(pygame.time.get_ticks())
             elif event.key == pygame.K_RIGHT:
@@ -249,33 +249,40 @@ class GameScreen(ScreenMode):
             elif event.key == pygame.K_UP:
                 if self.cursor()[1] != 0:
                     self.cursor()[1] -= 1
+            elif event.key == pygame.K_e:
+                if not game.level().normal_mode():
+                    self.change_is_game_over()
         else:
             if event.key == pygame.K_SPACE:
                 self.change_active()
-                self.set_is_game_over(False)
+                self.change_is_game_over()
                 ending_screen.change_active()
                 leaderboard.adding_new_score(
-                    game.score().name(),
-                    game.score().score()
+                    game.score()
                     )
-                leaderboard.save()
+                leaderboard.save_endless()
 
     def automatic(self, board, game):
-        if board.game_over(game.moves()):
-            self.set_is_game_over(True)
-        if board.jewel_refill():
+        if board.game_over(game.level().moves(), game.level().normal_mode()):
+            if not self.is_game_over():
+                self.change_is_game_over()
+        if board.is_blank():
+            board.jewel_refill()
             sleep(0.75)
-        board.destroying_jewels(game)
+        else:
+            board.destroying_jewels(game)
 
     def draw(self, screen, font, game, current_time, board):
         self.background(screen)
         invalid_text = font.render('Invalid move', True, 'Red')
+
         score = game.score().score()
         score_text = font.render(
             f'Score: {score}',
             True,
             'Black'
             )
+
         if game.highscore() < game.score().score():
             highscore = score
         else:
@@ -286,9 +293,23 @@ class GameScreen(ScreenMode):
             'Black'
             )
 
-        moves = game.moves()
+        moves = game.level().moves()
         moves_text = font.render(
             f'Moves: {moves}',
+            True,
+            'Black'
+        )
+
+        level = game.level().level()
+        level_text = font.render(
+            f'Level: {level}',
+            True,
+            'Black'
+        )
+
+        score_goal = game.level().goal()
+        score_goal_text = font.render(
+            f'Goal: {score_goal}',
             True,
             'Black'
         )
@@ -303,11 +324,17 @@ class GameScreen(ScreenMode):
         if not self.is_game_over():
             x, y = position_on_screen(self.cursor())
             pygame.draw.ellipse(screen, 'black', pygame.Rect(x, y, 5, 5))
+
         screen.blit(score_text, (board_width*50, 10))
-        screen.blit(highscore_text, (board_width*50, 60))
-        screen.blit(moves_text, (board_width*50, 110))
+
+        if game.level().normal_mode():
+            screen.blit(score_goal_text, (board_width*50, 60))
+            screen.blit(level_text, (board_width*50, 110))
+            screen.blit(moves_text, (board_width*50, 160))
+        screen.blit(highscore_text, (board_width*50, 210))
+
         if current_time - self.error_time() < 1000:
-            screen.blit(invalid_text, (board_width*50, 160))
+            screen.blit(invalid_text, (board_width*50, 260))
 
         if self.is_sellected():
             x, y = position_on_screen(self.select())
@@ -331,11 +358,27 @@ class EndingScreen(ScreenMode):
             game.reset(board)
             title_screen.change_active()
 
-    def draw(self, screen, font):
+    def draw(self, screen, font, leaderboard, game):
         self.background(screen)
         ending_text = font.render('Game over', True, 'Red')
         ending_text_rect = ending_text.get_rect(center=(
             SCREEN_WIDTH/2,
-            SCREEN_HEIGHT/2
+            30
         ))
+
         screen.blit(ending_text, ending_text_rect)
+
+        for index, score in enumerate(leaderboard.scores()):
+            if game.score() == score:
+                colour = 'red'
+            else:
+                colour = 'black'
+            score_text = font.render(
+                f'{index+1:>3}. {str(score)}',
+                True,
+                colour
+                )
+            screen.blit(
+                score_text,
+                (10, 60 + index * 30)
+            )
