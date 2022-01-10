@@ -12,9 +12,9 @@ def choose_colors(number_of_colors):
 
 
 board_width = 8  # min 8
-board_height = 8  # min 6
+board_height = 8  # min 8
 SCREEN_WIDTH = board_width*50+110
 SCREEN_HEIGHT = board_height*50+10
 number_of_jewels = 6
-number_of_moves = 3
+number_of_moves = 15
 colors_of_jewels = choose_colors(number_of_jewels)
