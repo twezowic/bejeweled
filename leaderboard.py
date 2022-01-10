@@ -12,7 +12,8 @@ class Score:
         return self._name
 
     def add_letter(self, letter):
-        self._name = self.name() + letter
+        if len(self.name()) < 10:
+            self._name = self.name() + letter
 
     def delete_letter(self):
         self._name = self.name()[:-1]
@@ -24,7 +25,7 @@ class Score:
         self._score = self.score() + score_to_add
 
     def __str__(self) -> str:
-        return f'{self.name():10} {self.score()}'
+        return f'{self.name():<10} {self.score():>10}'
 
     def __eq__(self, other) -> bool:
         cond1 = self.name() == other.name()
