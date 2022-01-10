@@ -20,7 +20,7 @@ def adjacent(first_position, second_position):
 
 def position_on_screen(position):
     x, y = position
-    return (x * 50 + 25, y * 50 + 25)
+    return (x * 50 + 30, y * 50 + 30)
 
 
 class ScreenMode:
@@ -169,7 +169,8 @@ class GameScreen(ScreenMode):
             cursor=None,
             select=None,
             is_sellected=False,
-            is_game_over=False):
+            is_game_over=False,
+            is_win=False):
 
         super().__init__(active)
 
@@ -183,6 +184,7 @@ class GameScreen(ScreenMode):
         self._select = select
         self._is_sellected = is_sellected
         self._is_game_over = is_game_over
+        self._is_win = is_win
 
     def error_time(self):
         return self._error_time
@@ -214,8 +216,27 @@ class GameScreen(ScreenMode):
     def change_is_game_over(self):
         self._is_game_over = not self.is_game_over()
 
+    def is_win(self):
+        return self._is_win
+
+    def change_is_win(self):
+        self._is_win = not self.is_win()
+
     def key_function(self, event, game, board, leaderboard, ending_screen):
-        if not self.is_game_over():
+        if self.is_win():
+            if event.key == pygame.K_SPACE:
+                self.change_is_win()
+                game.level().next_level(game, board)
+        elif self.is_game_over():
+            if event.key == pygame.K_SPACE:
+                self.change_active()
+                self.change_is_game_over()
+                ending_screen.change_active()
+                leaderboard.adding_new_score(
+                    game.score()
+                    )
+                leaderboard.save_endless()
+        else:
             if event.key == pygame.K_SPACE:
                 if not self.is_sellected():
                     self.set_sellect(tuple(self.cursor()))
@@ -252,29 +273,24 @@ class GameScreen(ScreenMode):
             elif event.key == pygame.K_e:
                 if not game.level().normal_mode():
                     self.change_is_game_over()
-        else:
-            if event.key == pygame.K_SPACE:
-                self.change_active()
-                self.change_is_game_over()
-                ending_screen.change_active()
-                leaderboard.adding_new_score(
-                    game.score()
-                    )
-                leaderboard.save_endless()
 
     def automatic(self, board, game):
-        if board.game_over(game.level().moves(), game.level().normal_mode()):
-            if not self.is_game_over():
-                self.change_is_game_over()
         if board.is_blank():
             board.jewel_refill()
             sleep(0.75)
         else:
             board.destroying_jewels(game)
 
+        if game.level().win_condition(game.score().score()):
+            if not board.is_blank() and not self.is_win():
+                self.change_is_win()
+        elif board.game_over(game.level().moves(), game.level().normal_mode()):
+            if not self.is_game_over():
+                self.change_is_game_over()
+
     def draw(self, screen, font, game, current_time, board):
-        self.background(screen)
-        invalid_text = font.render('Invalid move', True, 'Red')
+
+        menu_width = SCREEN_WIDTH - 100
 
         score = game.score().score()
         score_text = font.render(
@@ -282,6 +298,21 @@ class GameScreen(ScreenMode):
             True,
             'Black'
             )
+        score_rect = score_text.get_rect(topleft=(
+            menu_width,
+            10
+        ))
+
+        score_goal = game.level().goal()
+        score_goal_text = font.render(
+            f'Goal: {score_goal}',
+            True,
+            'Black'
+        )
+        score_goal_rect = score_goal_text.get_rect(topleft=(
+            menu_width,
+            60
+        ))
 
         if game.highscore() < game.score().score():
             highscore = score
@@ -292,6 +323,10 @@ class GameScreen(ScreenMode):
             True,
             'Black'
             )
+        highscore_rect = highscore_text.get_rect(topleft=(
+            menu_width,
+            60
+        ))
 
         moves = game.level().moves()
         moves_text = font.render(
@@ -299,6 +334,10 @@ class GameScreen(ScreenMode):
             True,
             'Black'
         )
+        moves_rect = moves_text.get_rect(topleft=(
+            menu_width,
+            160
+        ))
 
         level = game.level().level()
         level_text = font.render(
@@ -306,46 +345,118 @@ class GameScreen(ScreenMode):
             True,
             'Black'
         )
+        level_rect = level_text.get_rect(topleft=(
+            menu_width,
+            110
+        ))
 
-        score_goal = game.level().goal()
-        score_goal_text = font.render(
-            f'Goal: {score_goal}',
+        endless_text = font.render(
+            'Press e to exit.',
             True,
             'Black'
         )
+        endless_rect = endless_text.get_rect(topleft=(
+            menu_width,
+            110
+        ))
 
+        invalid_text = font.render('Invalid move', True, 'Red')
+        invalid_rect = invalid_text.get_rect(topleft=(
+            SCREEN_WIDTH - 100,
+            260
+        ))
+
+        white_box = pygame.Surface((200, 50))
+        white_box.fill('white')
+        white_box_rect = white_box.get_rect(center=(
+            (SCREEN_WIDTH-110)/2,
+            SCREEN_HEIGHT/2
+        ))
+
+        game_over = font.render(
+            'Game over',
+            True,
+            'Red'
+        )
+        game_over_rect = game_over.get_rect(center=(
+            (SCREEN_WIDTH-110)/2,
+            (SCREEN_HEIGHT-10)/2
+        ))
+
+        info = font.render(
+            'Press space to continue',
+            True,
+            'Black'
+        )
+        info_rect = info.get_rect(center=(
+            (SCREEN_WIDTH-110)/2,
+            (SCREEN_HEIGHT+10)/2
+        ))
+
+        win = font.render(
+            'Level complete',
+            True,
+            'Blue'
+        )
+        win_rect = win.get_rect(center=(
+            (SCREEN_WIDTH-110)/2,
+            (SCREEN_HEIGHT-10)/2
+        ))
+        self.background(screen)
         for y in range(board_height):
             for x in range(board_width):
-                pygame.draw.ellipse(
+                pygame.draw.circle(
                     screen,
                     board.board()[y][x].colour(),
-                    pygame.Rect(x*50+10, y*50+10, 40, 40)
+                    position_on_screen((x, y)),
+                    (20)
                     )
-        if not self.is_game_over():
-            x, y = position_on_screen(self.cursor())
-            pygame.draw.ellipse(screen, 'black', pygame.Rect(x, y, 5, 5))
 
-        screen.blit(score_text, (board_width*50, 10))
+        if not self.is_game_over() and not self.is_win():
+            pygame.draw.circle(  # ramka
+                screen,
+                'black',
+                position_on_screen(self.cursor()),
+                20,
+                5
+                )
+            pygame.draw.circle(  # kropka
+                screen,
+                'black',
+                position_on_screen(self.cursor()),
+                1
+                )
+
+        screen.blit(score_text, score_rect)
 
         if game.level().normal_mode():
-            screen.blit(score_goal_text, (board_width*50, 60))
-            screen.blit(level_text, (board_width*50, 110))
-            screen.blit(moves_text, (board_width*50, 160))
-        screen.blit(highscore_text, (board_width*50, 210))
+            screen.blit(score_goal_text, score_goal_rect)
+            screen.blit(level_text, level_rect)
+            screen.blit(moves_text, moves_rect)
+        else:
+            screen.blit(endless_text, endless_rect)
+            screen.blit(highscore_text, highscore_rect)
 
         if current_time - self.error_time() < 1000:
-            screen.blit(invalid_text, (board_width*50, 260))
+            screen.blit(invalid_text, invalid_rect)
 
         if self.is_sellected():
             x, y = position_on_screen(self.select())
             pygame.draw.rect(
                 screen,
                 'red',
-                pygame.Rect(x-20, y-20, 50, 50),
+                pygame.Rect(x-25, y-25, 50, 50),
                 5
                 )
-        if self.is_game_over():
-            pass
+
+        if self.is_win():
+            screen.blit(white_box, white_box_rect)
+            screen.blit(win, win_rect)
+            screen.blit(info, info_rect)
+        elif self.is_game_over():
+            screen.blit(white_box, white_box_rect)
+            screen.blit(game_over, game_over_rect)
+            screen.blit(info, info_rect)
 
 
 class EndingScreen(ScreenMode):
@@ -360,7 +471,7 @@ class EndingScreen(ScreenMode):
 
     def draw(self, screen, font, leaderboard, game):
         self.background(screen)
-        ending_text = font.render('Game over', True, 'Red')
+        ending_text = font.render('Leaderboard', True, 'Blue')
         ending_text_rect = ending_text.get_rect(center=(
             SCREEN_WIDTH/2,
             30
@@ -368,17 +479,29 @@ class EndingScreen(ScreenMode):
 
         screen.blit(ending_text, ending_text_rect)
 
+        selected = False
         for index, score in enumerate(leaderboard.scores()):
-            if game.score() == score:
+            if game.score() == score and not selected:
                 colour = 'red'
+                selected = True
             else:
                 colour = 'black'
-            score_text = font.render(
-                f'{index+1:>3}. {str(score)}',
+            name_text = font.render(
+                f'{index+1:2}. {score.name()}',
                 True,
                 colour
                 )
+
+            score_text = font.render(
+                f'{score.score():<10}',
+                True,
+                colour
+            )
+            screen.blit(
+                name_text,
+                (10, 60 + index * 32)
+            )
             screen.blit(
                 score_text,
-                (10, 60 + index * 30)
+                (250, 60 + index * 32)
             )
