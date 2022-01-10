@@ -23,9 +23,10 @@ class Level:
     def level(self):
         return self._level
 
-    def next_level(self):
+    def next_level(self, game, board):
         self._level += 1
         self.add_to_goal(200)
+        game.reset(board)
 
     def goal(self):
         return self._goal
@@ -43,6 +44,8 @@ class Level:
         self.set_moves(self.moves()-1)
 
     def win_condition(self, score):
+        if not self.normal_mode():
+            return False
         return score >= self.goal()
 
 
@@ -62,6 +65,9 @@ class Game:
     def score(self):
         return self._score
 
+    def set_score(self, new_score):
+        self._score = new_score
+
     def highscore(self):
         return self._highscore
 
@@ -70,5 +76,4 @@ class Game:
 
     def reset(self, board):
         board.setup_board()
-        self._score = Score()
-        self._level = Level()
+        self.set_score(Score())
