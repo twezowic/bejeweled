@@ -165,10 +165,10 @@ class Board:
         self.falling_jewels()
         self.new_jewels()
 
-    def game_over(self, number_of_moves=1, normal_mode=False):
+    def game_over(self, number_of_moves=1, normal=False):
         if self.is_blank():
             return False
-        if number_of_moves == 0 and normal_mode:
+        if number_of_moves == 0 and normal:
             return True
         for y in range(board_height):  # wiersze
             for x in range(board_width - 1):
