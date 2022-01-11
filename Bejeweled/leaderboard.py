@@ -13,7 +13,7 @@ class Score:
 
     def add_letter(self, letter: str):
         if letter.isalpha() and len(self.name()) < 10:
-            self._name = self.name() + letter
+            self._name += letter
 
     def delete_letter(self):
         self._name = self.name()[:-1]
@@ -25,10 +25,14 @@ class Score:
         return self._score
 
     def add_score(self, score_to_add: int):
-        self._score = self.score() + score_to_add
+        self._score += score_to_add
 
     def reset_score(self):
         self._score = 0
+
+    def reset(self):
+        self.reset_name()
+        self.reset_score()
 
     def __str__(self) -> str:
         return f'{self.name():<10} {self.score():>10}'
@@ -40,38 +44,33 @@ class Score:
 
 
 class Leadeboard:
-    def __init__(self, endless=None, normal=None):
-        if endless is None:
-            endless = []
+    def __init__(self):
+        endless = self.load('endless')
         self._endless = endless
-        if normal is None:
-            normal = []
+        normal = self.load('normal')
         self._normal = normal
 
     def scores(self, game_mode):
         return getattr(self, '_'+game_mode)
 
-    def set_endless(self, new_scores):
-        self._scores = new_scores
-
-    def set_normal(self, new_normal):
-        self._normal = new_normal
+    def set_scores(self, game_mode, new_scores):
+        setattr(self, '_'+game_mode, new_scores)
 
     def load(self, game_mode):
         try:
-            with open(f'leaderboard_{game_mode}.json', 'r') as file_handle:
+            with open(f'Bejeweled/leaderboard_{game_mode}.json', 'r') as file:
                 leadeboard = []
-                data = json.load(file_handle)
+                data = json.load(file)
                 for element in data:
                     name = element['name']
                     score = element['score']
                     leadeboard.append(Score(name, score))
-            getattr(self, 'set_'+game_mode)(leadeboard)
+            return leadeboard
         except FileNotFoundError:
             return []
 
     def save(self, game_mode):
-        with open(f'leaderboard_{game_mode}.json', 'w') as file_handle:
+        with open(f'Bejeweled/leaderboard_{game_mode}.json', 'w') as file:
             data = []
             leadeboard = self.scores(game_mode)
             for element in leadeboard:
@@ -82,7 +81,7 @@ class Leadeboard:
                     'score': score
                 }
                 data.append(score_data)
-            json.dump(data, file_handle, indent=4)
+            json.dump(data, file, indent=4)
 
     def __str__(self, game_mode):
         scores = self.scores(game_mode)
@@ -93,17 +92,11 @@ class Leadeboard:
 
     def adding_new_score(self, new_score, game_mode):
         leadeboard = self.scores(game_mode)
-        setter = getattr(self, 'set_'+game_mode)
-        if not leadeboard:
-            setter([new_score])
-            print(leadeboard)
-        else:
-            leadeboard.append(new_score)
-            leadeboard.sort(key=lambda score: score.score(), reverse=True)
-            if len(leadeboard) > 10:
-                setter(leadeboard[:10])
+        leadeboard.append(new_score)
+        leadeboard.sort(key=lambda score: score.score(), reverse=True)
+        self.set_scores(game_mode, leadeboard[:10])
 
     def highscore(self, game_mode):
         if not self.scores(game_mode):
             return 0
-        return getattr(self, game_mode)()[0].score()
+        return self.scores(game_mode)[0].score()
