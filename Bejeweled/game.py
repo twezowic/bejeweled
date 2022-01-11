@@ -6,29 +6,34 @@ from leaderboard import Leadeboard, Score
 class Level:
     def __init__(
             self,
-            normal=True,
+            mode=None,
             which_level=1,
             goal=basic_goal,
             moves=number_of_moves):
-        self._normal = normal
+        if mode is None:
+            mode = 'normal'
+        self._mode = mode
         self._level = which_level
         self._goal = goal
         self._moves = moves
 
-    def normal(self):
-        return self._normal
+    def mode(self):
+        return self._mode
 
-    def change_normal(self):
-        self._normal = not self.normal()
+    def change_mode(self):
+        if self.mode() == 'normal':
+            self._mode = 'endless'
+        else:
+            self._mode = 'normal'
+
+    def is_normal(self):
+        return self.mode() == 'normal'
 
     def level(self):
         return self._level
 
-    def next_level(self, game):
+    def add_level(self):
         self._level += 1
-        self.set_goal()
-        self.reset_moves()
-        game.reset()
 
     def goal(self):
         return self._goal
@@ -46,7 +51,7 @@ class Level:
         self._moves -= 1
 
     def win_condition(self, score):
-        if not self.normal():
+        if not self.is_normal():
             return False
         return score >= self.goal()
 
@@ -61,8 +66,6 @@ class Game:
         self._score = score
         self._level = level
         self._board = board
-        leaderboard.load('endless')
-        leaderboard.load('normal')
         self._leaderboard = leaderboard
 
     def level(self):
@@ -83,7 +86,14 @@ class Game:
     def leaderboard(self):
         return self._leaderboard
 
+    def next_level(self):
+        self.level().add_level()
+        self.level().set_goal()
+        self.level().reset_moves()
+        self.board().setup_board()
+        self.score().reset()
+
     def reset(self):
         self.board().setup_board()
-        self.score().reset_score()
+        self.score().reset()
         self.reset_level()
