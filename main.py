@@ -8,7 +8,7 @@ def main():
     board = Board()
     game = Game()
     leaderboard = Leadeboard()
-    leaderboard.load_endless()
+    leaderboard.load()
     game.set_highscore(leaderboard.get_highscore())
     board.setup_board()
     interface(board, game, leaderboard)
