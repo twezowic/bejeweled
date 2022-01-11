@@ -2,7 +2,7 @@ import json
 
 
 class Score:
-    def __init__(self, name:str=None, score:int=0):
+    def __init__(self, name=None, score=0):
         if name is None:
             name = ''
         self._name = name
@@ -11,7 +11,7 @@ class Score:
     def name(self):
         return self._name
 
-    def add_letter(self, letter:str):
+    def add_letter(self, letter: str):
         if letter.isalpha() and len(self.name()) < 10:
             self._name = self.name() + letter
 
@@ -24,7 +24,7 @@ class Score:
     def score(self):
         return self._score
 
-    def add_score(self, score_to_add:int):
+    def add_score(self, score_to_add: int):
         self._score = self.score() + score_to_add
 
     def reset_score(self):
@@ -33,7 +33,7 @@ class Score:
     def __str__(self) -> str:
         return f'{self.name():<10} {self.score():>10}'
 
-    def __eq__(self, other:Score()) -> bool:
+    def __eq__(self, other) -> bool:
         cond1 = self.name() == other.name()
         cond2 = self.score() == other.score()
         return cond1 and cond2
