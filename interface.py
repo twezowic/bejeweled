@@ -5,15 +5,15 @@ from screens import SCREEN_WIDTH, SCREEN_HEIGHT
 from screens import TitleScreen, MenuScreen, GameScreen, EndingScreen
 
 
-def interface(board, game, leaderboard):
+def interface(game):
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption('Bejeweled')
     clock = pygame.time.Clock()
 
     # fonts
-    font = pygame.font.Font('OpenSans.ttf', 12)
-    font_title = pygame.font.Font('OpenSans.ttf', 32)
+    font = pygame.font.Font('Opensans.ttf', 12)
+    font_title = pygame.font.Font('Opensans.ttf', 32)
     font_menu = pygame.font.Font('Opensans.ttf', 16)
 
     jewel = pygame.image.load('jewel.png')
@@ -28,7 +28,7 @@ def interface(board, game, leaderboard):
         current_time = pygame.time.get_ticks()
 
         if game_screen.active():
-            game_screen.automatic(board, game)
+            game_screen.automatic(game)
 
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
@@ -49,8 +49,6 @@ def interface(board, game, leaderboard):
                     game_screen.key_function(
                         event,
                         game,
-                        board,
-                        leaderboard,
                         ending_screen
                         )
 
@@ -59,7 +57,6 @@ def interface(board, game, leaderboard):
                         event,
                         title_screen,
                         game,
-                        board
                         )
 
             if event.type == pygame.QUIT:
@@ -74,10 +71,10 @@ def interface(board, game, leaderboard):
             menu_screen.draw(screen, font_menu, game)
 
         elif game_screen.active():
-            game_screen.draw(screen, font, game, current_time, board)
+            game_screen.draw(screen, font, game, current_time)
 
         elif ending_screen.active():
-            ending_screen.draw(screen, font_title, leaderboard, game)
+            ending_screen.draw(screen, font_title, game)
 
         pygame.display.update()
         clock.tick(30)
