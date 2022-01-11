@@ -232,10 +232,12 @@ class GameScreen(ScreenMode):
                 self.change_active()
                 self.change_is_game_over()
                 ending_screen.change_active()
-                leaderboard.adding_new_score(
-                    game.score()
-                    )
-                leaderboard.save_endless()
+                if not game.level().normal_mode():
+                    leaderboard.adding_new_score(
+                        game.score()
+                        )
+                    leaderboard.save()
+                game.score().reset_name()
         else:
             if event.key == pygame.K_SPACE:
                 if not self.is_sellected():
@@ -254,7 +256,7 @@ class GameScreen(ScreenMode):
                                 self.cursor()
                                 )
                             self.set_error_time(pygame.time.get_ticks())
-                        else:
+                        elif game.level().normal_mode():
                             game.level().one_move()
                     else:
                         self.set_error_time(pygame.time.get_ticks())
@@ -275,16 +277,15 @@ class GameScreen(ScreenMode):
                     self.change_is_game_over()
 
     def automatic(self, board, game):
+        if game.level().win_condition(game.score().score()):
+            if not board.is_blank() and not self.is_win():
+                self.change_is_win()
         if board.is_blank():
             board.jewel_refill()
             sleep(0.75)
         else:
             board.destroying_jewels(game)
-
-        if game.level().win_condition(game.score().score()):
-            if not board.is_blank() and not self.is_win():
-                self.change_is_win()
-        elif board.game_over(game.level().moves(), game.level().normal_mode()):
+        if board.game_over(game.level().moves(), game.level().normal_mode()):
             if not self.is_game_over():
                 self.change_is_game_over()
 
@@ -409,7 +410,7 @@ class GameScreen(ScreenMode):
                     screen,
                     board.board()[y][x].colour(),
                     position_on_screen((x, y)),
-                    (20)
+                    20
                     )
 
         if not self.is_game_over() and not self.is_win():
@@ -417,15 +418,15 @@ class GameScreen(ScreenMode):
                 screen,
                 'black',
                 position_on_screen(self.cursor()),
-                20,
-                5
+                24,
+                4
                 )
-            pygame.draw.circle(  # kropka
-                screen,
-                'black',
-                position_on_screen(self.cursor()),
-                1
-                )
+            # pygame.draw.circle(  # kropka
+            #     screen,
+            #     'black',
+            #     position_on_screen(self.cursor()),
+            #     3
+            #     )
 
         screen.blit(score_text, score_rect)
 
@@ -444,7 +445,7 @@ class GameScreen(ScreenMode):
             x, y = position_on_screen(self.select())
             pygame.draw.rect(
                 screen,
-                'red',
+                'black',
                 pygame.Rect(x-25, y-25, 50, 50),
                 5
                 )
