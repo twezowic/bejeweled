@@ -18,11 +18,17 @@ class Score:
     def delete_letter(self):
         self._name = self.name()[:-1]
 
+    def reset_name(self):
+        self._name = ''
+
     def score(self):
         return self._score
 
     def add_score(self, score_to_add):
         self._score = self.score() + score_to_add
+
+    def reset_score(self):
+        self._score = 0
 
     def __str__(self) -> str:
         return f'{self.name():<10} {self.score():>10}'
@@ -45,9 +51,9 @@ class Leadeboard:
     def set_scores(self, new_scores):
         self._scores = new_scores
 
-    def load_endless(self):
+    def load(self, game_mode='endless'):
         try:
-            with open('leaderboard_endless.json', 'r') as file_handle:
+            with open(f'leaderboard_{game_mode}.json', 'r') as file_handle:
                 leadeboard = []
                 data = json.load(file_handle)
                 for element in data:
@@ -58,8 +64,8 @@ class Leadeboard:
         except FileNotFoundError:
             return None
 
-    def save_endless(self):
-        with open('leaderboard_endless.json', 'w') as file_handle:
+    def save(self, game_mode='endless'):
+        with open(f'leaderboard_{game_mode}.json', 'w') as file_handle:
             data = []
             leadeboard = self.scores()
             for element in leadeboard:
