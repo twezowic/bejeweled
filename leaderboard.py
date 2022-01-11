@@ -40,18 +40,24 @@ class Score:
 
 
 class Leadeboard:
-    def __init__(self, scores=None):
-        if scores is None:
-            scores = []
-        self._scores = scores
+    def __init__(self, endless=None, normal=None):
+        if endless is None:
+            endless = []
+        self._endless = endless
+        if normal is None:
+            normal = []
+        self._normal = normal
 
-    def scores(self):
-        return self._scores
+    def scores(self, game_mode):
+        return getattr(self, '_'+game_mode)
 
-    def set_scores(self, new_scores):
+    def set_endless(self, new_scores):
         self._scores = new_scores
 
-    def load(self, game_mode='endless'):
+    def set_normal(self, new_normal):
+        self._normal = new_normal
+
+    def load(self, game_mode):
         try:
             with open(f'leaderboard_{game_mode}.json', 'r') as file_handle:
                 leadeboard = []
@@ -60,14 +66,14 @@ class Leadeboard:
                     name = element['name']
                     score = element['score']
                     leadeboard.append(Score(name, score))
-            self.set_scores(leadeboard)
+            getattr(self, 'set_'+game_mode)(leadeboard)
         except FileNotFoundError:
-            return None
+            return []
 
-    def save(self, game_mode='endless'):
+    def save(self, game_mode):
         with open(f'leaderboard_{game_mode}.json', 'w') as file_handle:
             data = []
-            leadeboard = self.scores()
+            leadeboard = self.scores(game_mode)
             for element in leadeboard:
                 name = element.name()
                 score = element.score()
@@ -78,24 +84,26 @@ class Leadeboard:
                 data.append(score_data)
             json.dump(data, file_handle, indent=4)
 
-    def __str__(self):
-        scores = self.scores()
+    def __str__(self, game_mode):
+        scores = self.scores(game_mode)
         result = ''
         for index, score in enumerate(scores):
             result += f'{index}. Player: {score.name()} {score.score()}\n'
         return result
 
-    def adding_new_score(self, new_score):
-        leadeboard = self.scores()
+    def adding_new_score(self, new_score, game_mode):
+        leadeboard = self.scores(game_mode)
+        setter = getattr(self, 'set_'+game_mode)
         if not leadeboard:
-            self.set_scores([new_score])
+            setter([new_score])
+            print(leadeboard)
         else:
             leadeboard.append(new_score)
             leadeboard.sort(key=lambda score: score.score(), reverse=True)
             if len(leadeboard) > 10:
-                self.set_scores(leadeboard[:10])
+                setter(leadeboard[:10])
 
-    def get_highscore(self):
-        if not self.scores():
+    def highscore(self, game_mode):
+        if not self.scores(game_mode):
             return 0
-        return self.scores()[0].score()
+        return getattr(self, game_mode)()[0].score()
