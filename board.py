@@ -79,6 +79,8 @@ class Board:
 
     def setup_board(self):
         self.create_board()
+        while self.game_over():
+            self.create_board()
         while self.destroying_move():
             self.destroying_jewels()
             while self.is_blank():
@@ -163,7 +165,7 @@ class Board:
         self.falling_jewels()
         self.new_jewels()
 
-    def game_over(self, number_of_moves, normal_mode):
+    def game_over(self, number_of_moves=1, normal_mode=False):
         if self.is_blank():
             return False
         if number_of_moves == 0 and normal_mode:
