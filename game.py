@@ -26,6 +26,7 @@ class Level:
     def next_level(self, game, board):
         self._level += 1
         self.add_to_goal(200)
+        self.set_moves(number_of_moves)
         game.reset(board)
 
     def goal(self):
@@ -76,4 +77,4 @@ class Game:
 
     def reset(self, board):
         board.setup_board()
-        self.set_score(Score())
+        self.score().reset_score()
