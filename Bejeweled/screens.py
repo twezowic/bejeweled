@@ -89,7 +89,7 @@ class MenuScreen(ScreenMode):
                 gamescreen.change_active()
                 game.board().setup_board()
             elif event.key == pygame.K_DOWN or event.key == pygame.K_UP:
-                game.level().change_normal()
+                game.level().change_mode()
 
     def draw(self, screen, font, game):
         self.background(screen)
@@ -140,7 +140,7 @@ class MenuScreen(ScreenMode):
             screen.blit(mode_info, mode_info_rect)
             screen.blit(normal_info, normal_info_rect)
             screen.blit(endless_info, endless_info_rect)
-            if game.level().normal():
+            if game.level().is_normal():
                 position = (
                     SCREEN_WIDTH/2-40,
                     70,
@@ -227,19 +227,18 @@ class GameScreen(ScreenMode):
         if self.is_win():
             if event.key == pygame.K_SPACE:
                 self.change_is_win()
-                game.level().next_level(game)
+                game.next_level()
         elif self.is_game_over():
             if event.key == pygame.K_SPACE:
                 self.change_active()
                 self.change_is_game_over()
                 ending_screen.change_active()
-                game_mode = 'normal' if game.level().normal() else 'endless'
+                game_mode = game.level().mode()
                 game.leaderboard().adding_new_score(
                     game.score(),
                     game_mode
                     )
                 game.leaderboard().save(game_mode)
-                game.score().reset_name()
         else:
             if event.key == pygame.K_SPACE:
                 if not self.is_sellected():
@@ -258,7 +257,7 @@ class GameScreen(ScreenMode):
                                 self.cursor()
                                 )
                             self.set_error_time(pygame.time.get_ticks())
-                        elif game.level().normal():
+                        elif game.level().is_normal():
                             game.level().one_move()
                     else:
                         self.set_error_time(pygame.time.get_ticks())
@@ -275,7 +274,7 @@ class GameScreen(ScreenMode):
                 if self.cursor()[1] != 0:
                     self.cursor()[1] -= 1
             elif event.key == pygame.K_e:
-                if not game.level().normal():
+                if not game.level().is_normal():
                     self.change_is_game_over()
 
     def automatic(self, game):
@@ -288,7 +287,7 @@ class GameScreen(ScreenMode):
         elif game.level().win_condition(game.score().score()):
             if not self.is_win():
                 self.change_is_win()
-        if game.board().game_over(game.level().moves(), game.level().normal()):
+        if game.board().game_over(game.level().moves(), game.level().mode()):
             if not self.is_game_over():
                 self.change_is_game_over()
 
@@ -317,7 +316,7 @@ class GameScreen(ScreenMode):
             menu_width,
             60
         ))
-        game_mode = 'normal' if game.level().normal() else 'endless'
+        game_mode = game.level().mode()
         if game.leaderboard().highscore(game_mode) < game.score().score():
             highscore = score
         else:
@@ -424,16 +423,10 @@ class GameScreen(ScreenMode):
                 24,
                 4
                 )
-            # pygame.draw.circle(  # kropka
-            #     screen,
-            #     'black',
-            #     position_on_screen(self.cursor()),
-            #     3
-            #     )
 
         screen.blit(score_text, score_rect)
 
-        if game.level().normal():
+        if game.level().is_normal():
             screen.blit(score_goal_text, score_goal_rect)
             screen.blit(level_text, level_rect)
             screen.blit(moves_text, moves_rect)
@@ -484,7 +477,7 @@ class EndingScreen(ScreenMode):
         screen.blit(ending_text, ending_text_rect)
 
         selected = False
-        game_mode = 'normal' if game.level().normal() else 'endless'
+        game_mode = game.level().mode()
         for index, score in enumerate(game.leaderboard().scores(game_mode)):
             if game.score() == score and not selected:
                 colour = 'red'
