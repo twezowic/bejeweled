@@ -3,7 +3,7 @@ from config import (
     board_height,
     board_width,
     SCREEN_WIDTH,
-    SCREEN_HEIGHT
+    SCREEN_HEIGHT,
     )
 from time import sleep
 
@@ -87,8 +87,9 @@ class MenuScreen(ScreenMode):
                 self.change_inputing_name()
                 self.change_active()
                 gamescreen.change_active()
+                game.board().setup_board()
             elif event.key == pygame.K_DOWN or event.key == pygame.K_UP:
-                game.level().change_normal_mode()
+                game.level().change_normal()
 
     def draw(self, screen, font, game):
         self.background(screen)
@@ -139,7 +140,7 @@ class MenuScreen(ScreenMode):
             screen.blit(mode_info, mode_info_rect)
             screen.blit(normal_info, normal_info_rect)
             screen.blit(endless_info, endless_info_rect)
-            if game.level().normal_mode():
+            if game.level().normal():
                 position = (
                     SCREEN_WIDTH/2-40,
                     70,
@@ -222,21 +223,22 @@ class GameScreen(ScreenMode):
     def change_is_win(self):
         self._is_win = not self.is_win()
 
-    def key_function(self, event, game, board, leaderboard, ending_screen):
+    def key_function(self, event, game, ending_screen):
         if self.is_win():
             if event.key == pygame.K_SPACE:
                 self.change_is_win()
-                game.level().next_level(game, board)
+                game.level().next_level(game)
         elif self.is_game_over():
             if event.key == pygame.K_SPACE:
                 self.change_active()
                 self.change_is_game_over()
                 ending_screen.change_active()
-                if not game.level().normal_mode():
-                    leaderboard.adding_new_score(
-                        game.score()
-                        )
-                    leaderboard.save()
+                game_mode = 'normal' if game.level().normal() else 'endless'
+                game.leaderboard().adding_new_score(
+                    game.score(),
+                    game_mode
+                    )
+                game.leaderboard().save(game_mode)
                 game.score().reset_name()
         else:
             if event.key == pygame.K_SPACE:
@@ -246,17 +248,17 @@ class GameScreen(ScreenMode):
                 elif self.select() != tuple(self.cursor()):
                     self.change_is_sellected()
                     if adjacent(self.select(), self.cursor()):
-                        board.swap_jewels(
+                        game.board().swap_jewels(
                             self.select(),
                             self.cursor()
                             )
-                        if not board.destroying_move():
-                            board.swap_jewels(
+                        if not game.board().destroying_move():
+                            game.board().swap_jewels(
                                 self.select(),
                                 self.cursor()
                                 )
                             self.set_error_time(pygame.time.get_ticks())
-                        elif game.level().normal_mode():
+                        elif game.level().normal():
                             game.level().one_move()
                     else:
                         self.set_error_time(pygame.time.get_ticks())
@@ -273,23 +275,24 @@ class GameScreen(ScreenMode):
                 if self.cursor()[1] != 0:
                     self.cursor()[1] -= 1
             elif event.key == pygame.K_e:
-                if not game.level().normal_mode():
+                if not game.level().normal():
                     self.change_is_game_over()
 
-    def automatic(self, board, game):
-        if game.level().win_condition(game.score().score()):
-            if not board.is_blank() and not self.is_win():
-                self.change_is_win()
-        if board.is_blank():
-            board.jewel_refill()
+    def automatic(self, game):
+        if game.board().is_blank():
+            game.board().jewel_refill()
             sleep(0.75)
-        else:
-            board.destroying_jewels(game)
-        if board.game_over(game.level().moves(), game.level().normal_mode()):
+        elif game.board().destroying_move():
+            game.board().destroying_jewels(game)
+            sleep(0.5)
+        elif game.level().win_condition(game.score().score()):
+            if not self.is_win():
+                self.change_is_win()
+        if game.board().game_over(game.level().moves(), game.level().normal()):
             if not self.is_game_over():
                 self.change_is_game_over()
 
-    def draw(self, screen, font, game, current_time, board):
+    def draw(self, screen, font, game, current_time):
 
         menu_width = SCREEN_WIDTH - 100
 
@@ -314,11 +317,11 @@ class GameScreen(ScreenMode):
             menu_width,
             60
         ))
-
-        if game.highscore() < game.score().score():
+        game_mode = 'normal' if game.level().normal() else 'endless'
+        if game.leaderboard().highscore(game_mode) < game.score().score():
             highscore = score
         else:
-            highscore = game.highscore()
+            highscore = game.leaderboard().highscore(game_mode)
         highscore_text = font.render(
             f'Highscore: {highscore}',
             True,
@@ -408,7 +411,7 @@ class GameScreen(ScreenMode):
             for x in range(board_width):
                 pygame.draw.circle(
                     screen,
-                    board.board()[y][x].colour(),
+                    game.board().board()[y][x].colour(),
                     position_on_screen((x, y)),
                     20
                     )
@@ -430,7 +433,7 @@ class GameScreen(ScreenMode):
 
         screen.blit(score_text, score_rect)
 
-        if game.level().normal_mode():
+        if game.level().normal():
             screen.blit(score_goal_text, score_goal_rect)
             screen.blit(level_text, level_rect)
             screen.blit(moves_text, moves_rect)
@@ -464,13 +467,13 @@ class EndingScreen(ScreenMode):
     def __init__(self, active=False):
         super().__init__(active)
 
-    def key_function(self, event, title_screen, game, board):
+    def key_function(self, event, title_screen, game):
         if event.key == pygame.K_SPACE:
             self.change_active()
-            game.reset(board)
+            game.reset()
             title_screen.change_active()
 
-    def draw(self, screen, font, leaderboard, game):
+    def draw(self, screen, font, game):
         self.background(screen)
         ending_text = font.render('Leaderboard', True, 'Blue')
         ending_text_rect = ending_text.get_rect(center=(
@@ -481,7 +484,8 @@ class EndingScreen(ScreenMode):
         screen.blit(ending_text, ending_text_rect)
 
         selected = False
-        for index, score in enumerate(leaderboard.scores()):
+        game_mode = 'normal' if game.level().normal() else 'endless'
+        for index, score in enumerate(game.leaderboard().scores(game_mode)):
             if game.score() == score and not selected:
                 colour = 'red'
                 selected = True
