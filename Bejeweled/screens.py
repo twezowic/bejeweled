@@ -375,9 +375,12 @@ class GameScreen(ScreenMode):
             (SCREEN_WIDTH-110)/2,
             SCREEN_HEIGHT/2
         ))
-
+        if game.level().moves() == 0:
+            reason = 'No moves left.'
+        else:
+            reason = 'No moves available.'
         game_over = font.render(
-            'Game over',
+            f'{reason} Game over',
             True,
             'Red'
         )
