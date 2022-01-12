@@ -408,14 +408,46 @@ class GameScreen(ScreenMode):
             (SCREEN_HEIGHT-10)/2
         ))
         self.background(screen)
-        for y in range(board_height):
+
+        # for y in range(board_height):  # circles
+        #     for x in range(board_width):
+        #         pygame.draw.circle(
+        #             screen,
+        #             game.board().board()[y][x].colour(),
+        #             position_on_screen((x, y)),
+        #             20
+        #             )
+
+        for y in range(board_height):  # diamonds
             for x in range(board_width):
-                pygame.draw.circle(
+                pygame.draw.polygon(
                     screen,
                     game.board().board()[y][x].colour(),
-                    position_on_screen((x, y)),
-                    20
+                    (
+                        (20+x*50, 15+y*50),
+                        (40+x*50, 15+y*50),
+                        (50+x*50, 30+y*50),
+                        (30+x*50, 50+y*50),
+                        (10+x*50, 30+y*50)
                     )
+                )
+
+        # for y in range(board_height):  # rubins
+        #     for x in range(board_width):
+        #         pygame.draw.polygon(
+        #             screen,
+        #             game.board().board()[y][x].colour(),
+        #             (
+        #                 (22.5+x*50, 12.5+y*50),
+        #                 (37.5+x*50, 12.5+y*50),
+        #                 (45+x*50, 20+y*50),
+        #                 (45+x*50, 40+y*50),
+        #                 (37.5+x*50, 47.5+y*50),
+        #                 (22.5+x*50, 47.5+y*50),
+        #                 (15+x*50, 40+y*50),
+        #                 (15+x*50, 20+y*50)
+        #             )
+        #         )
 
         if not self.is_game_over() and not self.is_win():
             pygame.draw.circle(  # ramka
