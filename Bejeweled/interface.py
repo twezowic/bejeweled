@@ -12,11 +12,12 @@ def interface(game):
     clock = pygame.time.Clock()
 
     # fonts
-    font = pygame.font.Font('Bejeweled/Opensans.ttf', 12)
-    font_title = pygame.font.Font('Bejeweled/Opensans.ttf', 32)
-    font_menu = pygame.font.Font('Bejeweled/Opensans.ttf', 16)
+    font_path = 'Bejeweled/download/Opensans.ttf'
+    font = pygame.font.Font(font_path, 12)
+    font_title = pygame.font.Font(font_path, 32)
+    font_menu = pygame.font.Font(font_path, 16)
 
-    jewel = pygame.image.load('Bejeweled/jewel.png')
+    jewel = pygame.image.load('Bejeweled/download/jewel.png')
     pygame.display.set_icon(jewel)
 
     title_screen = TitleScreen()
