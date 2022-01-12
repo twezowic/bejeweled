@@ -44,10 +44,12 @@ class Score:
 
 
 class Leadeboard:
-    def __init__(self):
-        endless = self.load('endless')
+    def __init__(self, endless=None, normal=None):
+        if endless is None:
+            endless = []
         self._endless = endless
-        normal = self.load('normal')
+        if normal is None:
+            normal = []
         self._normal = normal
 
     def scores(self, game_mode):
