@@ -80,6 +80,16 @@ def test_equals():
     assert score1 != score4
 
 
+def test_set_scores():
+    leaderboard = Leadeboard()
+    score1 = Score('ana', 1000)
+    leaderboard.set_scores('endless', [score1])
+    assert leaderboard.scores('endless') == [score1]
+    score2 = Score('bob', 1000)
+    leaderboard.set_scores('normal', [score2])
+    assert leaderboard.scores('normal') == [score2]
+
+
 def test_adding_new_score():
     leaderboard = Leadeboard()
     game_mode = 'endless'
