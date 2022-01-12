@@ -243,9 +243,7 @@ class GameScreen(ScreenMode):
             if event.key == pygame.K_SPACE:
                 if not self.is_sellected():
                     self.set_sellect(tuple(self.cursor()))
-                    self.change_is_sellected()
-                elif self.select() != tuple(self.cursor()):
-                    self.change_is_sellected()
+                else:
                     if adjacent(self.select(), self.cursor()):
                         game.board().swap_jewels(
                             self.select(),
@@ -261,6 +259,7 @@ class GameScreen(ScreenMode):
                             game.level().one_move()
                     else:
                         self.set_error_time(pygame.time.get_ticks())
+                self.change_is_sellected()
             elif event.key == pygame.K_RIGHT:
                 if self.cursor()[0] != board_width - 1:
                     self.cursor()[0] += 1
@@ -283,7 +282,7 @@ class GameScreen(ScreenMode):
             sleep(0.75)
         elif game.board().destroying_move():
             game.board().destroying_jewels(game)
-            sleep(0.5)
+            sleep(0.75)
         elif game.level().win_condition(game.score().score()):
             if not self.is_win():
                 self.change_is_win()
