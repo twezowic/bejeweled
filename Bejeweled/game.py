@@ -97,3 +97,11 @@ class Game:
         self.board().setup_board()
         self.score().reset()
         self.reset_level()
+
+    def setup(self):
+        self.leaderboard().set_scores(
+            'endless',
+            self.leaderboard().load('endless'))
+        self.leaderboard().set_scores(
+            'normal',
+            self.leaderboard().load('normal'))
