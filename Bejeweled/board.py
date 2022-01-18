@@ -1,5 +1,18 @@
-from config import board_width, board_height, colors_of_jewels
+from config import board_width, board_height, number_of_jewels
 from random import choice
+from colorsys import hls_to_rgb
+
+
+def choose_colors(number_of_colors):
+    colors = []
+    for i in range(1, number_of_colors+1):
+        h, l, s = (i/number_of_colors, 0.5, 1.0)
+        r, g, b = [255*i for i in hls_to_rgb(h, l, s)]
+        colors.append((r, g, b))
+    return colors
+
+
+colors_of_jewels = choose_colors(number_of_jewels)
 
 
 class Jewel:
@@ -23,6 +36,14 @@ class Jewel:
         if self.colour == 'white':
             return False
         return self.colour() == other.colour()
+
+
+def _is_match(counter, game):
+    if counter >= 3:
+        if game is not None:
+            game.score().add_score(((2 ** (counter - 2)) * 50))
+        return True
+    return False
 
 
 class Board:
@@ -94,12 +115,6 @@ class Board:
         board[y1][x1], board[y2][x2] = board[y2][x2], board[y1][x1]
 
     def destroying_jewels(self, game=None):
-        def is_match(counter, game):
-            if counter >= 3:
-                if game is not None:
-                    game.score().add_score(((2 ** (counter - 2)) * 50))
-                return True
-            return False
         if not self.is_blank():
             board = self.board()
             for y in range(board_height):
@@ -109,12 +124,12 @@ class Board:
                     if board[y][x] == board[y][x-1]:
                         counter += 1
                     else:
-                        if is_match(counter, game):
+                        if _is_match(counter, game):
                             for i in range(first, x):
                                 board[y][i].set_delete(True)
                         first = x
                         counter = 1
-                if is_match(counter, game):
+                if _is_match(counter, game):
                     for i in range(first, board_width):
                         board[y][i].set_delete(True)
 
@@ -125,12 +140,12 @@ class Board:
                     if board[y][x] == board[y-1][x]:
                         counter += 1
                     else:
-                        if is_match(counter, game):
+                        if _is_match(counter, game):
                             for i in range(first, y):
                                 board[i][x].set_delete(True)
                         first = y
                         counter = 1
-                if is_match(counter, game):
+                if _is_match(counter, game):
                     for i in range(first, board_height):
                         board[i][x].set_delete(True)
 
