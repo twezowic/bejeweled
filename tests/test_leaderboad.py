@@ -1,4 +1,5 @@
 from Bejeweled.leaderboard import Score, Leadeboard
+from io import StringIO
 
 
 def test_add_letter():
@@ -90,12 +91,109 @@ def test_set_scores():
     assert leaderboard.scores('normal') == [score2]
 
 
+def test_load():
+    leaderboard = Leadeboard()
+    file = StringIO('''
+    [
+    {
+        "name": "john",
+        "score": 400
+    },
+    {
+        "name": "bob",
+        "score": 300
+    }
+    ]
+    ''')
+    leaderboard.load('endless', file)
+    assert leaderboard.scores('endless') == [
+        Score('john', 400),
+        Score('bob', 300)
+        ]
+
+
+def test_save():
+    leaderboard = Leadeboard([
+        Score('john', 400),
+        Score('bob', 300)
+        ])
+    file = StringIO()
+    leaderboard.save('endless', file)
+    file.seek(0)
+    assert file.read() == '''[
+    {
+        "name": "john",
+        "score": 400
+    },
+    {
+        "name": "bob",
+        "score": 300
+    }
+]'''
+    # print(file.read())
+
+
 def test_adding_new_score():
     leaderboard = Leadeboard()
     game_mode = 'endless'
     score1 = Score('ana', 100)
     leaderboard.adding_new_score(score1, game_mode)
     assert leaderboard.scores(game_mode) == [score1]
+
+
+def test_adding_new_score_more_than_10():
+    leaderboard = Leadeboard(
+        [
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100)
+        ],
+        [
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100)
+        ]
+    )
+    leaderboard.adding_new_score(Score('b', 100), 'endless')
+    assert leaderboard.scores('endless') == [
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100)
+        ]
+    leaderboard.adding_new_score(Score('b', 1000), 'normal')
+    assert leaderboard.scores('normal') == [
+            Score('b', 1000),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100),
+            Score('a', 100)
+        ]
 
 
 def test_highscore():
