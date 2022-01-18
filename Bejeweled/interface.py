@@ -1,7 +1,9 @@
 import pygame
 from sys import exit
-
-from screens import SCREEN_WIDTH, SCREEN_HEIGHT
+from screens import (
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH
+)
 from screens import TitleScreen, MenuScreen, GameScreen, EndingScreen
 
 

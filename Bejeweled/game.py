@@ -91,17 +91,35 @@ class Game:
         self.level().set_goal()
         self.level().reset_moves()
         self.board().setup_board()
-        self.score().reset()
+        self.score().reset_score()
 
     def reset(self):
         self.board().setup_board()
         self.score().reset()
         self.reset_level()
 
-    def setup(self):
-        self.leaderboard().set_scores(
-            'endless',
-            self.leaderboard().load('endless'))
-        self.leaderboard().set_scores(
-            'normal',
-            self.leaderboard().load('normal'))
+    def moving_jewels(self, position1, position2):
+        def adjacent(first_position, second_position):
+            x1, y1 = first_position
+            x2, y2 = second_position
+            if (x2 - 1 == x1 or x2 + 1 == x1) and y1 == y2:
+                return True
+            if (y2 - 1 == y1 or y2 + 1 == y1) and x1 == x2:
+                return True
+            return False
+
+        if adjacent(position1, position2):
+            self.board().swap_jewels(
+                position1,
+                position2
+                )
+            if not self.board().destroying_move():
+                self.board().swap_jewels(
+                    position1,
+                    position2
+                    )
+                return False
+            elif self.level().is_normal():
+                self.level().one_move()
+            return True
+        return False
