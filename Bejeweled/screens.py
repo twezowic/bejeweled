@@ -3,24 +3,9 @@ from config import (
     board_height,
     board_width,
     SCREEN_WIDTH,
-    SCREEN_HEIGHT,
+    SCREEN_HEIGHT
     )
 from time import sleep
-
-
-def adjacent(first_position, second_position):
-    x1, y1 = first_position
-    x2, y2 = second_position
-    if (x2 - 1 == x1 or x2 + 1 == x1) and y1 == y2:
-        return True
-    if (y2 - 1 == y1 or y2 + 1 == y1) and x1 == x2:
-        return True
-    return False
-
-
-def position_on_screen(position):
-    x, y = position
-    return (x * 50 + 30, y * 50 + 30)
 
 
 class ScreenMode:
@@ -49,16 +34,18 @@ class TitleScreen(ScreenMode):
 
     def draw(self, screen, font, jewel):
         self.background(screen)
-        jewel_rect = jewel.get_rect(center=(SCREEN_WIDTH/2, 128))
+        jewel_rect = jewel.get_rect(center=(
+            SCREEN_WIDTH*0.5,
+            SCREEN_HEIGHT * 0.4))
         begin_info = font.render(
             'Press space to start the game',
             True,
             'Blue'
             )
         begin_info_rect = begin_info.get_rect(center=(
-            SCREEN_WIDTH/2,
-            (SCREEN_HEIGHT + 256) / 2)
-            )
+            SCREEN_WIDTH * 0.5,
+            SCREEN_HEIGHT * 0.75
+            ))
         screen.blit(jewel, jewel_rect)
         screen.blit(begin_info, begin_info_rect)
 
@@ -171,7 +158,9 @@ class GameScreen(ScreenMode):
             select=None,
             is_sellected=False,
             is_game_over=False,
-            is_win=False):
+            is_win=False,
+            is_automatic=False,
+            highscore=0):
 
         super().__init__(active)
 
@@ -186,6 +175,8 @@ class GameScreen(ScreenMode):
         self._is_sellected = is_sellected
         self._is_game_over = is_game_over
         self._is_win = is_win
+        self._is_automatic = is_automatic
+        self._highscore = highscore
 
     def error_time(self):
         return self._error_time
@@ -223,11 +214,33 @@ class GameScreen(ScreenMode):
     def change_is_win(self):
         self._is_win = not self.is_win()
 
+    def is_automatic(self):
+        return self._is_automatic
+
+    def set_is_automatic(self, new_is_automatic):
+        self._is_automatic = new_is_automatic
+
+    def highscore(self):
+        return self._highscore
+
+    def set_highscore(self, new_highscore):
+        self._highscore = new_highscore
+
     def key_function(self, event, game, ending_screen):
         if self.is_win():
             if event.key == pygame.K_SPACE:
                 self.change_is_win()
                 game.next_level()
+            elif event.key == pygame.K_e:
+                self.change_active()
+                ending_screen.change_active()
+                self.change_is_win()
+                game_mode = game.level().mode()
+                game.leaderboard().adding_new_score(
+                    self.highscore(),
+                    game_mode
+                    )
+                game.leaderboard().save_to_file(game_mode)
         elif self.is_game_over():
             if event.key == pygame.K_SPACE:
                 self.change_active()
@@ -235,31 +248,19 @@ class GameScreen(ScreenMode):
                 ending_screen.change_active()
                 game_mode = game.level().mode()
                 game.leaderboard().adding_new_score(
-                    game.score(),
+                    self.highscore(),
                     game_mode
                     )
-                game.leaderboard().save(game_mode)
-        else:
+                game.leaderboard().save_to_file(game_mode)
+        elif not self.is_automatic():
             if event.key == pygame.K_SPACE:
                 if not self.is_sellected():
                     self.set_sellect(tuple(self.cursor()))
                 else:
-                    if adjacent(self.select(), self.cursor()):
-                        game.board().swap_jewels(
-                            self.select(),
-                            self.cursor()
-                            )
-                        if not game.board().destroying_move():
-                            game.board().swap_jewels(
-                                self.select(),
-                                self.cursor()
-                                )
-                            self.set_error_time(pygame.time.get_ticks())
-                        elif game.level().is_normal():
-                            game.level().one_move()
-                    else:
+                    if not game.moving_jewels(self.cursor(), self.select()):
                         self.set_error_time(pygame.time.get_ticks())
                 self.change_is_sellected()
+
             elif event.key == pygame.K_RIGHT:
                 if self.cursor()[0] != board_width - 1:
                     self.cursor()[0] += 1
@@ -279,18 +280,41 @@ class GameScreen(ScreenMode):
     def automatic(self, game):
         if game.board().is_blank():
             game.board().jewel_refill()
-            sleep(0.75)
+            self.set_is_automatic(True)
+            sleep(0.5)
+            return True
         elif game.board().destroying_move():
             game.board().destroying_jewels(game)
-            sleep(0.75)
+            self.set_is_automatic(True)
+            sleep(0.5)
+            return True
         elif game.level().win_condition(game.score().score()):
             if not self.is_win():
                 self.change_is_win()
         if game.board().game_over(game.level().moves(), game.level().mode()):
             if not self.is_game_over():
                 self.change_is_game_over()
+        self.set_is_automatic(False)
 
     def draw(self, screen, font, game, current_time):
+
+        def position_on_screen_cursors(position):
+            x, y = position
+            return (x * 50 + 30, y * 50 + 30)
+
+        def position_on_screen_select(position):
+            x, y = position
+            return (x*50+5, y*50+5)
+
+        def position_on_screen_jewels(position):
+            x, y = position
+            return (
+                (20+x*50, 15+y*50),
+                (40+x*50, 15+y*50),
+                (50+x*50, 30+y*50),
+                (30+x*50, 50+y*50),
+                (10+x*50, 30+y*50)
+            )
 
         menu_width = SCREEN_WIDTH - 100
 
@@ -316,8 +340,10 @@ class GameScreen(ScreenMode):
             60
         ))
         game_mode = game.level().mode()
-        if game.leaderboard().highscore(game_mode) < game.score().score():
-            highscore = score
+        if self.highscore() < game.score().score():
+            self.set_highscore(game.score().score())
+        if game.leaderboard().highscore(game_mode) < self.highscore():
+            highscore = self.highscore()
         else:
             highscore = game.leaderboard().highscore(game_mode)
         highscore_text = font.render(
@@ -325,9 +351,10 @@ class GameScreen(ScreenMode):
             True,
             'Black'
             )
+        highscore_height = 210 if game.level().is_normal() else 110
         highscore_rect = highscore_text.get_rect(topleft=(
             menu_width,
-            60
+            highscore_height
         ))
 
         moves = game.level().moves()
@@ -352,15 +379,21 @@ class GameScreen(ScreenMode):
             110
         ))
 
-        endless_text = font.render(
+        exit_text = font.render(
             'Press e to exit.',
             True,
             'Black'
         )
-        endless_rect = endless_text.get_rect(topleft=(
-            menu_width,
-            110
-        ))
+        if game.level().is_normal():
+            exit_rect = exit_text.get_rect(center=(
+                (SCREEN_WIDTH-110)/2,
+                (SCREEN_HEIGHT+30)/2
+            ))
+        else:
+            exit_rect = exit_text.get_rect(topleft=(
+                menu_width,
+                210
+            ))
 
         invalid_text = font.render('Invalid move', True, 'Red')
         invalid_rect = invalid_text.get_rect(topleft=(
@@ -374,12 +407,15 @@ class GameScreen(ScreenMode):
             (SCREEN_WIDTH-110)/2,
             SCREEN_HEIGHT/2
         ))
-        if game.level().moves() == 0:
-            reason = 'No moves left.'
-        else:
-            reason = 'No moves available.'
+        reason = 'Game over'
+        if game.level().is_normal():
+            if game.level().moves() == 0:
+                reason = f'No moves left. {reason}'
+            else:
+                reason = f'No moves available. {reason}'
+
         game_over = font.render(
-            f'{reason} Game over',
+            reason,
             True,
             'Red'
         )
@@ -407,76 +443,44 @@ class GameScreen(ScreenMode):
             (SCREEN_WIDTH-110)/2,
             (SCREEN_HEIGHT-10)/2
         ))
+
         self.background(screen)
-
-        # for y in range(board_height):  # circles
-        #     for x in range(board_width):
-        #         pygame.draw.circle(
-        #             screen,
-        #             game.board().board()[y][x].colour(),
-        #             position_on_screen((x, y)),
-        #             20
-        #             )
-
         for y in range(board_height):  # diamonds
             for x in range(board_width):
                 pygame.draw.polygon(
                     screen,
                     game.board().board()[y][x].colour(),
-                    (
-                        (20+x*50, 15+y*50),
-                        (40+x*50, 15+y*50),
-                        (50+x*50, 30+y*50),
-                        (30+x*50, 50+y*50),
-                        (10+x*50, 30+y*50)
-                    )
+                    position_on_screen_jewels((x, y))
                 )
-
-        # for y in range(board_height):  # rubins
-        #     for x in range(board_width):
-        #         pygame.draw.polygon(
-        #             screen,
-        #             game.board().board()[y][x].colour(),
-        #             (
-        #                 (22.5+x*50, 12.5+y*50),
-        #                 (37.5+x*50, 12.5+y*50),
-        #                 (45+x*50, 20+y*50),
-        #                 (45+x*50, 40+y*50),
-        #                 (37.5+x*50, 47.5+y*50),
-        #                 (22.5+x*50, 47.5+y*50),
-        #                 (15+x*50, 40+y*50),
-        #                 (15+x*50, 20+y*50)
-        #             )
-        #         )
 
         if not self.is_game_over() and not self.is_win():
-            pygame.draw.circle(  # ramka
-                screen,
-                'black',
-                position_on_screen(self.cursor()),
-                24,
-                4
-                )
+            if not self.is_automatic():
+                pygame.draw.circle(  # ramka
+                    screen,
+                    'black',
+                    position_on_screen_cursors(self.cursor()),
+                    24,
+                    4
+                    )
 
         screen.blit(score_text, score_rect)
-
+        screen.blit(highscore_text, highscore_rect)
         if game.level().is_normal():
             screen.blit(score_goal_text, score_goal_rect)
             screen.blit(level_text, level_rect)
             screen.blit(moves_text, moves_rect)
         else:
-            screen.blit(endless_text, endless_rect)
-            screen.blit(highscore_text, highscore_rect)
+            screen.blit(exit_text, exit_rect)
 
         if current_time - self.error_time() < 1000:
             screen.blit(invalid_text, invalid_rect)
 
         if self.is_sellected():
-            x, y = position_on_screen(self.select())
+            x, y = position_on_screen_select(self.select())
             pygame.draw.rect(
                 screen,
                 'black',
-                pygame.Rect(x-25, y-25, 50, 50),
+                pygame.Rect(x, y, 50, 50),
                 5
                 )
 
@@ -484,6 +488,7 @@ class GameScreen(ScreenMode):
             screen.blit(white_box, white_box_rect)
             screen.blit(win, win_rect)
             screen.blit(info, info_rect)
+            screen.blit(exit_text, exit_rect)
         elif self.is_game_over():
             screen.blit(white_box, white_box_rect)
             screen.blit(game_over, game_over_rect)
