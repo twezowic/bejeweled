@@ -1,4 +1,4 @@
-from Bejeweled.leaderboard import Score, Leadeboard
+from bejeweled.leaderboard import Score, Leadeboard
 from io import StringIO
 
 
@@ -52,6 +52,12 @@ def test_add_score():
     assert score.score() == 100
 
 
+def test_set_score():
+    score = Score()
+    score.set_score(1000)
+    assert score.score() == 1000
+
+
 def test_reset_score():
     score = Score()
     score.add_score(100)
@@ -93,19 +99,22 @@ def test_set_scores():
 
 def test_load():
     leaderboard = Leadeboard()
-    file = StringIO('''
-    [
+    file = StringIO('''[
     {
-        "name": "john",
-        "score": 400
-    },
-    {
-        "name": "bob",
-        "score": 300
+        "normal": [],
+        "endless": [
+            {
+                "name": "john",
+                "score": 400
+            },
+            {
+                "name": "bob",
+                "score": 300
+            }
+        ]
     }
-    ]
-    ''')
-    leaderboard.load('endless', file)
+]''')
+    leaderboard.load(file)
     assert leaderboard.scores('endless') == [
         Score('john', 400),
         Score('bob', 300)
@@ -118,19 +127,23 @@ def test_save():
         Score('bob', 300)
         ])
     file = StringIO()
-    leaderboard.save('endless', file)
+    leaderboard.save(file)
     file.seek(0)
     assert file.read() == '''[
     {
-        "name": "john",
-        "score": 400
-    },
-    {
-        "name": "bob",
-        "score": 300
+        "normal": [],
+        "endless": [
+            {
+                "name": "john",
+                "score": 400
+            },
+            {
+                "name": "bob",
+                "score": 300
+            }
+        ]
     }
 ]'''
-    # print(file.read())
 
 
 def test_adding_new_score():
@@ -197,6 +210,12 @@ def test_adding_new_score_more_than_10():
 
 
 def test_highscore():
+    leaderboard = Leadeboard([Score('bob', 1000), Score('ana', 500)])
+    game_mode = 'endless'
+    assert leaderboard.highscore(game_mode) == 1000
+
+
+def test_highscore_without():
     leaderboard = Leadeboard()
     game_mode = 'endless'
     assert leaderboard.highscore(game_mode) == 0
