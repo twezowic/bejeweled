@@ -1,14 +1,12 @@
 import pygame
 from sys import exit
-from screens import (
-    SCREEN_HEIGHT,
-    SCREEN_WIDTH
-)
 from screens import TitleScreen, MenuScreen, GameScreen, EndingScreen
 
 
 def interface(game):
     pygame.init()
+    SCREEN_WIDTH = game.board().width()*50+110
+    SCREEN_HEIGHT = game.board().height()*50+10
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption('Bejeweled')
     clock = pygame.time.Clock()
@@ -22,10 +20,10 @@ def interface(game):
     jewel = pygame.image.load('Bejeweled/download/jewel.png')
     pygame.display.set_icon(jewel)
 
-    title_screen = TitleScreen()
-    menu_screen = MenuScreen()
-    game_screen = GameScreen()
-    ending_screen = EndingScreen()
+    title_screen = TitleScreen(SCREEN_WIDTH, SCREEN_HEIGHT)
+    menu_screen = MenuScreen(SCREEN_WIDTH, SCREEN_HEIGHT)
+    game_screen = GameScreen(SCREEN_WIDTH, SCREEN_HEIGHT)
+    ending_screen = EndingScreen(SCREEN_WIDTH, SCREEN_HEIGHT)
 
     while True:
         current_time = pygame.time.get_ticks()

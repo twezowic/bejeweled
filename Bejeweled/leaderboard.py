@@ -27,6 +27,9 @@ class Score:
     def add_score(self, score_to_add: int):
         self._score += score_to_add
 
+    def set_score(self, new_score):
+        self._score = new_score
+
     def reset_score(self):
         self._score = 0
 
@@ -58,38 +61,60 @@ class Leadeboard:
     def set_scores(self, game_mode, new_scores):
         setattr(self, '_'+game_mode, new_scores)
 
-    def load(self, game_mode, file):
-        leadeboard = []
+    def load(self, file):
         data = json.load(file)
-        for element in data:
-            name = element['name']
-            score = element['score']
-            leadeboard.append(Score(name, score))
-        self.set_scores(game_mode, leadeboard)
+        leaderboard_normal = []
+        leaderboard_endless = []
+        for mode in ['normal', 'endless']:
+            leaderboard = data[0][mode]
+            for element in leaderboard:
+                name = element['name']
+                score = element['score']
+                eval(f'leaderboard_{mode}').append(Score(name, score))
+        self.set_scores('normal', leaderboard_normal)
+        self.set_scores('endless', leaderboard_endless)
 
-    def load_from_file(self, game_mode):
+    def load_from_file(self):
         try:
-            with open(f'Bejeweled/leaderboard_{game_mode}.json', 'r') as file:
-                return self.load(game_mode, file)
+            with open('Bejeweled/leaderboard.json', 'r') as file:
+                self.load(file)
         except FileNotFoundError:
-            return []
+            self.set_scores('normal', [])
+            self.set_scores('endless', [])
 
-    def save(self, game_mode, file):
+    def save(self, file):
         data = []
-        leadeboard = self.scores(game_mode)
-        for element in leadeboard:
+        normal = []
+        endless = []
+        for element in self.scores('normal'):
             name = element.name()
             score = element.score()
             score_data = {
                 'name': name,
                 'score': score
             }
-            data.append(score_data)
+            normal.append(score_data)
+
+        for element in self.scores('endless'):
+            name = element.name()
+            score = element.score()
+            score_data = {
+                'name': name,
+                'score': score
+            }
+            endless.append(score_data)
+
+        mode = {
+            'normal': normal,
+            'endless': endless
+        }
+
+        data.append(mode)
         json.dump(data, file, indent=4)
 
-    def save_to_file(self, game_mode):
-        with open(f'Bejeweled/leaderboard_{game_mode}.json', 'w') as file:
-            self.save(game_mode, file)
+    def save_to_file(self):
+        with open('Bejeweled/leaderboard.json', 'w') as file:
+            self.save(file)
 
     def __str__(self, game_mode):
         scores = self.scores(game_mode)
@@ -108,7 +133,3 @@ class Leadeboard:
         if not self.scores(game_mode):
             return 0
         return self.scores(game_mode)[0].score()
-
-    def setup(self):
-        self.load_from_file('endless')
-        self.load_from_file('normal')

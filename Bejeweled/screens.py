@@ -1,16 +1,18 @@
 import pygame
-from config import (
-    board_height,
-    board_width,
-    SCREEN_WIDTH,
-    SCREEN_HEIGHT
-    )
 from time import sleep
 
 
 class ScreenMode:
-    def __init__(self, active):
+    def __init__(self, screen_width, screen_height, active):
+        self._width = screen_width
+        self._height = screen_height
         self._active = active
+
+    def width(self):
+        return self._width
+
+    def height(self):
+        return self._height
 
     def active(self):
         return self._active
@@ -23,8 +25,8 @@ class ScreenMode:
 
 
 class TitleScreen(ScreenMode):
-    def __init__(self, active=True):
-        super().__init__(active)
+    def __init__(self, screen_width, screen_height, active=True):
+        super().__init__(screen_width, screen_height, active)
 
     def key_function(self, event, menuscreen):
         if event.type == pygame.KEYDOWN:
@@ -35,24 +37,29 @@ class TitleScreen(ScreenMode):
     def draw(self, screen, font, jewel):
         self.background(screen)
         jewel_rect = jewel.get_rect(center=(
-            SCREEN_WIDTH*0.5,
-            SCREEN_HEIGHT * 0.4))
+            self.width()*0.5,
+            self.height() * 0.4))
         begin_info = font.render(
             'Press space to start the game',
             True,
             'Blue'
             )
         begin_info_rect = begin_info.get_rect(center=(
-            SCREEN_WIDTH * 0.5,
-            SCREEN_HEIGHT * 0.75
+            self.width() * 0.5,
+            self.height() * 0.75
             ))
         screen.blit(jewel, jewel_rect)
         screen.blit(begin_info, begin_info_rect)
 
 
 class MenuScreen(ScreenMode):
-    def __init__(self, active=False, inputing_name=True):
-        super().__init__(active)
+    def __init__(
+            self,
+            screen_width,
+            screen_height,
+            active=False,
+            inputing_name=True):
+        super().__init__(screen_width, screen_height, active)
         self._inputing_name = inputing_name
 
     def inputing_name(self):
@@ -74,7 +81,7 @@ class MenuScreen(ScreenMode):
                 self.change_inputing_name()
                 self.change_active()
                 gamescreen.change_active()
-                game.board().setup_board()
+                game.setup_board()
             elif event.key == pygame.K_DOWN or event.key == pygame.K_UP:
                 game.level().change_mode()
 
@@ -86,7 +93,7 @@ class MenuScreen(ScreenMode):
             'Black'
         )
         name_info_rect = name_info.get_rect(center=(
-            SCREEN_WIDTH/2,
+            self.width()/2,
             20
         ))
         mode_info = font.render(
@@ -95,7 +102,7 @@ class MenuScreen(ScreenMode):
             'Black'
         )
         mode_info_rect = mode_info.get_rect(center=(
-            SCREEN_WIDTH/2,
+            self.width()/2,
             60
         ))
         normal_info = font.render(
@@ -104,7 +111,7 @@ class MenuScreen(ScreenMode):
             'Blue'
         )
         normal_info_rect = normal_info.get_rect(center=(
-            SCREEN_WIDTH/2,
+            self.width()/2,
             80
         ))
         endless_info = font.render(
@@ -113,12 +120,12 @@ class MenuScreen(ScreenMode):
             'Blue'
         )
         endless_info_rect = endless_info.get_rect(center=(
-            SCREEN_WIDTH/2,
+            self.width()/2,
             100
         ))
         name_text = font.render(game.score().name(), True, 'black')
         name_text_rect = name_text.get_rect(center=(
-                SCREEN_WIDTH/2,
+                self.width()/2,
                 40
             ))
         screen.blit(name_text, name_text_rect)
@@ -129,14 +136,14 @@ class MenuScreen(ScreenMode):
             screen.blit(endless_info, endless_info_rect)
             if game.level().is_normal():
                 position = (
-                    SCREEN_WIDTH/2-40,
+                    self.width()/2-40,
                     70,
                     80,
                     20
                 )
             else:
                 position = (
-                    SCREEN_WIDTH/2-40,
+                    self.width()/2-40,
                     90,
                     80,
                     20
@@ -152,6 +159,8 @@ class MenuScreen(ScreenMode):
 class GameScreen(ScreenMode):
     def __init__(
             self,
+            screen_width,
+            screen_height,
             active=False,
             error_time=-1000,
             cursor=None,
@@ -162,7 +171,7 @@ class GameScreen(ScreenMode):
             is_automatic=False,
             highscore=0):
 
-        super().__init__(active)
+        super().__init__(screen_width, screen_height, active)
 
         if cursor is None:
             cursor = [0, 0]
@@ -236,22 +245,24 @@ class GameScreen(ScreenMode):
                 ending_screen.change_active()
                 self.change_is_win()
                 game_mode = game.level().mode()
+                game.score().set_score(self.highscore())
                 game.leaderboard().adding_new_score(
-                    self.highscore(),
+                    game.score(),
                     game_mode
                     )
-                game.leaderboard().save_to_file(game_mode)
+                game.leaderboard().save_to_file()
         elif self.is_game_over():
             if event.key == pygame.K_SPACE:
                 self.change_active()
                 self.change_is_game_over()
                 ending_screen.change_active()
                 game_mode = game.level().mode()
+                game.score().set_score(self.highscore())
                 game.leaderboard().adding_new_score(
-                    self.highscore(),
+                    game.score(),
                     game_mode
                     )
-                game.leaderboard().save_to_file(game_mode)
+                game.leaderboard().save_to_file()
         elif not self.is_automatic():
             if event.key == pygame.K_SPACE:
                 if not self.is_sellected():
@@ -262,13 +273,13 @@ class GameScreen(ScreenMode):
                 self.change_is_sellected()
 
             elif event.key == pygame.K_RIGHT:
-                if self.cursor()[0] != board_width - 1:
+                if self.cursor()[0] != game.board().width() - 1:
                     self.cursor()[0] += 1
             elif event.key == pygame.K_LEFT:
                 if self.cursor()[0] != 0:
                     self.cursor()[0] -= 1
             elif event.key == pygame.K_DOWN:
-                if self.cursor()[1] != board_height - 1:
+                if self.cursor()[1] != game.board().height() - 1:
                     self.cursor()[1] += 1
             elif event.key == pygame.K_UP:
                 if self.cursor()[1] != 0:
@@ -284,7 +295,7 @@ class GameScreen(ScreenMode):
             sleep(0.5)
             return True
         elif game.board().destroying_move():
-            game.board().destroying_jewels(game)
+            game.destroying_jewels(True)
             self.set_is_automatic(True)
             sleep(0.5)
             return True
@@ -316,7 +327,7 @@ class GameScreen(ScreenMode):
                 (10+x*50, 30+y*50)
             )
 
-        menu_width = SCREEN_WIDTH - 100
+        menu_width = self.width() - 100
 
         score = game.score().score()
         score_text = font.render(
@@ -386,8 +397,8 @@ class GameScreen(ScreenMode):
         )
         if game.level().is_normal():
             exit_rect = exit_text.get_rect(center=(
-                (SCREEN_WIDTH-110)/2,
-                (SCREEN_HEIGHT+30)/2
+                (self.width()-110)/2,
+                (self.height()+30)/2
             ))
         else:
             exit_rect = exit_text.get_rect(topleft=(
@@ -397,15 +408,15 @@ class GameScreen(ScreenMode):
 
         invalid_text = font.render('Invalid move', True, 'Red')
         invalid_rect = invalid_text.get_rect(topleft=(
-            SCREEN_WIDTH - 100,
+            self.width() - 100,
             260
         ))
 
         white_box = pygame.Surface((200, 50))
         white_box.fill('white')
         white_box_rect = white_box.get_rect(center=(
-            (SCREEN_WIDTH-110)/2,
-            SCREEN_HEIGHT/2
+            (self.width()-110)/2,
+            self.height()/2
         ))
         reason = 'Game over'
         if game.level().is_normal():
@@ -420,8 +431,8 @@ class GameScreen(ScreenMode):
             'Red'
         )
         game_over_rect = game_over.get_rect(center=(
-            (SCREEN_WIDTH-110)/2,
-            (SCREEN_HEIGHT-10)/2
+            (self.width()-110)/2,
+            (self.height()-10)/2
         ))
 
         info = font.render(
@@ -430,8 +441,8 @@ class GameScreen(ScreenMode):
             'Black'
         )
         info_rect = info.get_rect(center=(
-            (SCREEN_WIDTH-110)/2,
-            (SCREEN_HEIGHT+10)/2
+            (self.width()-110)/2,
+            (self.height()+10)/2
         ))
 
         win = font.render(
@@ -440,13 +451,13 @@ class GameScreen(ScreenMode):
             'Blue'
         )
         win_rect = win.get_rect(center=(
-            (SCREEN_WIDTH-110)/2,
-            (SCREEN_HEIGHT-10)/2
+            (self.width()-110)/2,
+            (self.height()-10)/2
         ))
 
         self.background(screen)
-        for y in range(board_height):  # diamonds
-            for x in range(board_width):
+        for y in range(game.board().height()):  # diamonds
+            for x in range(game.board().width()):
                 pygame.draw.polygon(
                     screen,
                     game.board().board()[y][x].colour(),
@@ -496,8 +507,8 @@ class GameScreen(ScreenMode):
 
 
 class EndingScreen(ScreenMode):
-    def __init__(self, active=False):
-        super().__init__(active)
+    def __init__(self, screen_width, screen_height, active=False):
+        super().__init__(screen_width, screen_height, active)
 
     def key_function(self, event, title_screen, game):
         if event.key == pygame.K_SPACE:
@@ -509,7 +520,7 @@ class EndingScreen(ScreenMode):
         self.background(screen)
         ending_text = font.render('Leaderboard', True, 'Blue')
         ending_text_rect = ending_text.get_rect(center=(
-            SCREEN_WIDTH/2,
+            self.width()/2,
             30
         ))
 

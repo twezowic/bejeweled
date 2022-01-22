@@ -7,8 +7,8 @@ import sys
 def main(args):
     arguments = create_parser(args)
     print(arguments)
-    game = Game()
-    game.leaderboard().setup()
+    game = Game(arguments)
+    game.leaderboard().load_from_file()
     interface(game)
 
 
