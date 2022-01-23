@@ -319,7 +319,7 @@ class Game:
 
     def setup_board(self):
         """
-        Setup board so that it will be not having matches at the start
+        Setup board so that it will not be having matches at the start
             and there is at least one possible move.
         """
         self.board().create_board()
