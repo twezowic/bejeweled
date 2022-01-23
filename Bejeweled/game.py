@@ -1,5 +1,5 @@
-from board import Board
-from leaderboard import Leadeboard, Score
+from bejeweled.board import Board
+from bejeweled.leaderboard import Leadeboard, Score
 
 
 class Level:
@@ -87,6 +87,9 @@ class Game:
     def board(self):
         return self._board
 
+    def set_board(self, new_board):
+        self._board = new_board
+
     def leaderboard(self):
         return self._leaderboard
 
@@ -166,6 +169,7 @@ class Game:
                     if board[y][x].delete():
                         board[y][x].set_colour('white')
                         board[y][x].set_delete(False)
+            self.board().set_board(board)
 
     def setup_board(self):
         self.board().create_board()

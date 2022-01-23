@@ -33,6 +33,9 @@ class Jewel:
             return False
         return self.colour() == other.colour()
 
+    def is_same_colour(self, other):
+        return self.colour() == other.colour()
+
 
 class Board:
     def __init__(self, width, height, num_col, board=None):
@@ -73,7 +76,7 @@ class Board:
         for y in range(self.height()):
             line = ''
             for x in range(self.width()):
-                line += f'{board[y][x].colour()}'
+                line += f'{board[y][x].colour()} '
             print(line)
 
     def destroying_move(self):

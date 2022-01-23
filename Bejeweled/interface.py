@@ -1,6 +1,6 @@
 import pygame
 from sys import exit
-from screens import TitleScreen, MenuScreen, GameScreen, EndingScreen
+from bejeweled.screens import TitleScreen, MenuScreen, GameScreen, EndingScreen
 
 
 def interface(game):
