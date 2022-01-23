@@ -3,38 +3,105 @@ from time import sleep
 
 
 class ScreenMode:
-    def __init__(self, screen_width, screen_height, active):
-        self._width = screen_width
-        self._height = screen_height
+    def __init__(self, width: int, height: int, active: bool):
+        """
+        Creates instance of ScreenMode class.
+
+        Args:
+            width (int): screen's width
+
+            height (int): screen's height
+
+            active (bool): is the screen displayed
+        """
+        self._width = width
+        self._height = height
         self._active = active
 
-    def width(self):
+    def width(self) -> int:
+        """
+        Returns:
+            int: screen's width
+        """
         return self._width
 
-    def height(self):
+    def height(self) -> int:
+        """
+        Returns:
+            int: screen's height
+        """
         return self._height
 
-    def active(self):
+    def active(self) -> bool:
+        """
+        Returns:
+            bool: is the screen displayed
+        """
         return self._active
 
     def change_active(self):
+        """
+        Changes is the active attribute is True or False.
+        If it is True it changes it to False.
+        And if it is False it changes it to True.
+        """
         self._active = not self.active()
 
     def background(self, screen):
+        """
+        Fills the background of the screen with bisque colour.
+
+        Args:
+            screen (pygame.display): screen in which it will be displayed
+        """
         screen.fill('bisque')
 
 
 class TitleScreen(ScreenMode):
-    def __init__(self, screen_width, screen_height, active=True):
-        super().__init__(screen_width, screen_height, active)
+    def __init__(self, width: int, height: int):
+        """
+        Creates instance of TitleScreen class.
+        Which inherits from ScreenMode class.
+
+        Args:
+            width (int): screen's width
+
+            height (int): screen's height
+
+            active (bool): is the screen displayed.
+            Defaults to True.
+        """
+        super().__init__(width, height, True)
 
     def key_function(self, event, menuscreen):
+        """
+        Adds key functionality to interface.
+
+        If space is pressed the active screen is changed.
+        From TitleScreen to ModeScreen by changing the active attributes.
+
+
+        Args:
+            event (pygame.event): event object from pygame
+
+            menuscreen (Menuscreen): menuscreen object
+        """
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 self.change_active()
                 menuscreen.change_active()
 
     def draw(self, screen, font, jewel):
+        """
+        Prepares the title screen for displaying.
+
+        Args:
+            screen (pygame.display): screen in which it will be displayed
+
+            font (pygame.font): font which is being used
+
+            jewel (image): image which will be displayed
+        """
         self.background(screen)
         jewel_rect = jewel.get_rect(center=(
             self.width()*0.5,
@@ -55,26 +122,78 @@ class TitleScreen(ScreenMode):
 class MenuScreen(ScreenMode):
     def __init__(
             self,
-            screen_width,
-            screen_height,
-            active=False,
-            inputing_name=True):
-        super().__init__(screen_width, screen_height, active)
-        self._inputing_name = inputing_name
+            width: int,
+            height: int):
+        """
+        Creates instance of MenuScreen class
+        Which inherits from ScreenMode class.
 
-    def inputing_name(self):
+        Args:
+            width (int): screen's width
+
+            height (int): screen's height
+
+            active (bool): is the screen displayed.
+            Defaults to False.
+
+            inputing_name (bool): is in state of inputing name.
+            Defaults to True.
+        """
+        super().__init__(width, height, False)
+        self._inputing_name = True
+
+    def inputing_name(self) -> bool:
+        """
+        Returns:
+            bool: is in state of inputing name
+        """
         return self._inputing_name
 
     def change_inputing_name(self):
+        """
+        Changes is the inputing_name attribute is True or False.
+        If it is True it changes it to False.
+        And if it is False it changes it to True.
+        """
         self._inputing_name = not self.inputing_name()
 
     def key_function(self, event, gamescreen, game):
+        """
+        Adds key functionality to interface.
+
+        If game is in inputing state:
+            If backspace is pressed:
+            The game.score().delete_letter() method is performed.
+
+            If space is pressed and player's name is not empty:
+            The self.change_inputing_name method is performed.
+
+            Otherwise:
+            The game.score().add_letter(key) method is performed.
+            Where key is what key was pressed.
+
+        Otherwise:
+            If space is pressed the active screen is changed.
+            From ModeScreen to GameScreen by changing the active attributes.
+            Resets the inputing_name attribute.
+            The game.board().create_board() method is performed.
+
+            If up arrow or down arrow method is pressed.
+            The game.level().change_mode() method is performed
+
+        Args:
+            event (pygame.event): event object from pygame
+
+            gamescreen (GameScreen): object of GameScreen class
+
+            game (Game): object of Game class
+        """
         if self.inputing_name():
             if event.key == pygame.K_BACKSPACE:
                 game.score().delete_letter()
             elif event.key == pygame.K_SPACE and game.score().name():
                 self.change_inputing_name()
-            elif event.key != pygame.K_SPACE:
+            else:
                 game.score().add_letter(event.unicode)
         else:
             if event.key == pygame.K_SPACE:
@@ -86,6 +205,16 @@ class MenuScreen(ScreenMode):
                 game.level().change_mode()
 
     def draw(self, screen, font, game):
+        """
+        Prepares the menu screen for displaying.
+
+        Args:
+            screen (pygame.display): screen in which it will be displayed
+
+            font (pygame.font): font which is being used
+
+            game (Game): object of Game class
+        """
         self.background(screen)
         name_info = font.render(
             'Please enter your name. Press space to confirm.',
@@ -159,83 +288,229 @@ class MenuScreen(ScreenMode):
 class GameScreen(ScreenMode):
     def __init__(
             self,
-            screen_width,
-            screen_height,
-            active=False,
-            error_time=-1000,
-            cursor=None,
-            select=None,
-            is_sellected=False,
-            is_game_over=False,
-            is_win=False,
-            is_automatic=False,
-            highscore=0):
+            width: int,
+            height: int):
+        """
+        Creates instance of GameScreen class.
+        Which inherits from ScreenMode class.
 
-        super().__init__(screen_width, screen_height, active)
+        Args:
+            width (int): screen's width
 
-        if cursor is None:
-            cursor = [0, 0]
-        if select is None:
-            select = []
+            height (int): screen's height
 
-        self._error_time = error_time
-        self._cursor = cursor
-        self._select = select
-        self._is_sellected = is_sellected
-        self._is_game_over = is_game_over
-        self._is_win = is_win
-        self._is_automatic = is_automatic
-        self._highscore = highscore
+            active (bool): is the screen displayed
+            Defaults to False.
 
-    def error_time(self):
+            error_time (int): time when a invalid move is done.
+            Default number is set to -1000 so,
+                the error message wouldn't be showed at the start.
+            Defaults to -1000.
+
+            cursor (list): cursor positon in board scale.
+            Defaults to [0, 0].
+
+            select (list): selected jewel position.
+            Defaults to [].
+
+            is_sellected (bool): is jewel sellected.
+            Defaults to False.
+
+            is_game_over (bool): is game in game over state.
+            Defaults to False.
+
+            is_win (bool): is game in win state.
+            Defaults to False.
+
+            is_automatic (bool): is automatic function of board being held.
+            Defaults to False.
+
+            highscore (int): the best player's score of this game.
+            Defaults to 0.
+        """
+
+        super().__init__(width, height, False)
+        self._error_time = -1000
+        self._cursor = [0, 0]
+        self._select = []
+        self._is_sellected = False
+        self._is_game_over = False
+        self._is_win = False
+        self._is_automatic = False
+        self._highscore = 0
+
+    def error_time(self) -> int:
+        """
+        Returns:
+            int: time when a invalid move is done.
+        """
         return self._error_time
 
-    def set_error_time(self, new_error_time):
+    def set_error_time(self, new_error_time: int):
+        """
+        Sets when the invalid move is done.
+
+        Args:
+            new_error_time (int): time of error to be set
+        """
         self._error_time = new_error_time
 
-    def cursor(self):
+    def cursor(self) -> list:
+        """
+        Returns:
+            list: cursor positon in board scale.
+        """
         return self._cursor
 
-    def set_cursor(self, new_cursor):
+    def set_cursor(self, new_cursor: list):
+        """
+        Sets cursor position
+
+        Args:
+            new_cursor (list): cursor positon to be set
+        """
         self._cursor = new_cursor
 
-    def select(self):
+    def select(self) -> list:
+        """
+        Returns:
+            list: selected jewel position
+        """
         return self._select
 
-    def set_sellect(self, new_select):
+    def set_sellect(self, new_select: list):
+        """
+        Sets sellected jewel position
+
+        Args:
+            new_select (list): sellected jewel position to be set
+        """
         self._select = new_select
 
-    def is_sellected(self):
+    def is_sellected(self) -> bool:
+        """
+        Returns:
+            bool: is jewel sellected.
+        """
         return self._is_sellected
 
     def change_is_sellected(self):
+        """
+        Changes is the is_sellected attribute is True or False.
+        If it is True it changes it to False.
+        And if it is False it changes it to True.
+        """
         self._is_sellected = not self.is_sellected()
 
-    def is_game_over(self):
+    def is_game_over(self) -> bool:
+        """
+        Returns:
+            bool: is game in game over state.
+        """
         return self._is_game_over
 
     def change_is_game_over(self):
+        """
+        Changes is the is_game_over attribute is True or False.
+        If it is True it changes it to False.
+        And if it is False it changes it to True.
+        """
         self._is_game_over = not self.is_game_over()
 
-    def is_win(self):
+    def is_win(self) -> bool:
+        """
+        Returns:
+            bool: is game in win state
+        """
         return self._is_win
 
     def change_is_win(self):
+        """
+        Changes is the is_win attribute is True or False.
+        If it is True it changes it to False.
+        And if it is False it changes it to True.
+        """
         self._is_win = not self.is_win()
 
-    def is_automatic(self):
+    def is_automatic(self) -> bool:
+        """
+        Returns:
+            bool: is automatic function of board being held
+        """
         return self._is_automatic
 
-    def set_is_automatic(self, new_is_automatic):
+    def set_is_automatic(self, new_is_automatic: bool):
+        """
+        Sets is automatic function of board being held.
+
+        Args:
+            new_is_automatic (bool): automatic state to be set
+        """
         self._is_automatic = new_is_automatic
 
-    def highscore(self):
+    def highscore(self) -> int:
+        """
+        Returns:
+            int: the best player's score of this game
+        """
         return self._highscore
 
-    def set_highscore(self, new_highscore):
+    def set_highscore(self, new_highscore: int):
+        """
+        Sets new highscore of this game.
+
+        Args:
+            new_highscore (int): highscore to be set
+        """
         self._highscore = new_highscore
 
-    def key_function(self, event, game, ending_screen):
+    def key_function(self, event, ending_screen, game):
+        """
+        Adds key functionality to interface.
+
+        If game is in win state:
+            If space is pressed:
+            The is_win attribute reset.
+            The game.next_level() method is performed.
+
+            If e is pressed the active screen is changed:
+            From ModeScreen to GameScreen by changing the active attributes.
+            Gamescreen resets.
+            The score is added to the leaderboard and saved to file.
+
+        If game is in game_over state:
+            If space is pressed the active screen is changed:
+            From ModeScreen to GameScreen by changing the active attributes.
+            Gamescreen resets.
+            The score is added to the leaderboard and saved to file.
+
+        if game not in automatic state:
+            If space is pressed:
+            The jewel is sellected if it was not.
+            Otherwise game.moving_jewels() method is performed
+
+            If right key is pressed:
+            The cursor position moves to the right not outside of board.
+
+            If left key is pressed:
+            The cursor position moves to the left not outside of board.
+
+            If up key is pressed:
+            The cursor position moves to the up not outside of board.
+
+            If down key is pressed:
+            The cursor position moves to the down not outside of board.
+
+            If e is pressed and game is endless mode:
+            The self.change_is_game_over() method is performed.
+
+        Args:
+            event (pygame.event): event object from pygame
+
+            ending_screen (EndingScreen): object of EndingScreen class
+
+            game (Game): object of Game class
+        """
         if self.is_win():
             if event.key == pygame.K_SPACE:
                 self.change_is_win()
@@ -289,6 +564,27 @@ class GameScreen(ScreenMode):
                     self.change_is_game_over()
 
     def automatic(self, game):
+        """
+        Performs automatic functions:
+
+        If there are blank jewels in board:
+        The game.board().jewel_refill() method is performed.
+
+        If there are jewels to destroy:
+        The game.destroying_jewels(True) method is performed.
+
+        If the win condition is fulfilled:
+        The self.change_win() method is performed.
+
+        If the game over condition is fulfilled:
+        The self.change_game_over() method is performed.
+
+        Args:
+            game (Game): object of Game class
+
+        Returns:
+            bool: is automatic board functions is done
+        """
         if game.board().is_blank():
             game.board().jewel_refill()
             self.set_is_automatic(True)
@@ -308,16 +604,49 @@ class GameScreen(ScreenMode):
         self.set_is_automatic(False)
 
     def draw(self, screen, font, game, current_time):
+        """
+        Prepares the game screen for displaying.
 
-        def position_on_screen_cursors(position):
+        Args:
+            screen (pygame.display): screen in which it will be displayed
+
+            font (pygame.font): font which is being used
+
+            game (Game): object of Game class
+
+            current_time (int): current time of game
+        """
+
+        def position_on_screen_cursors(position: list) -> list:
+            """
+            Args:
+                position (list): position of cursor in board scale
+
+            Returns:
+                list: position of cursor in screen scale
+            """
             x, y = position
             return (x * 50 + 30, y * 50 + 30)
 
-        def position_on_screen_select(position):
+        def position_on_screen_select(position: list) -> list:
+            """
+            Args:
+                position (list): position of sellected jewel in board scale
+
+            Returns:
+                list: position of sellected jewel in screen scale
+            """
             x, y = position
             return (x*50+5, y*50+5)
 
-        def position_on_screen_jewels(position):
+        def position_on_screen_jewels(position: list) -> list:
+            """
+            Args:
+                position (list): position of jewel in board scale
+
+            Returns:
+                list: points of jewel to display on screen
+            """
             x, y = position
             return (
                 (20+x*50, 15+y*50),
@@ -507,16 +836,50 @@ class GameScreen(ScreenMode):
 
 
 class EndingScreen(ScreenMode):
-    def __init__(self, screen_width, screen_height, active=False):
-        super().__init__(screen_width, screen_height, active)
+    def __init__(self, width: int, height: int):
+        """
+        Creates instance of EndingScreen class.
+        Which inherits from ScreenMode class.
+
+        Args:
+            width (int): screen's width
+
+            height (int): screen's height
+
+            active (bool): is the screen displayed.
+        """
+        super().__init__(width, height, False)
 
     def key_function(self, event, title_screen, game):
+        """
+        Adds key functionality to interface.
+
+        If space is pressed the active screen is changed.
+        From EndingScreen to TitleScreen by changing the active attributes.
+
+        Args:
+            event (pygame.event): event object from pygame
+
+            title_screen (TitleScreen): object of TitleScreen class
+
+            game (Game): object of Game class
+        """
         if event.key == pygame.K_SPACE:
             self.change_active()
             game.reset()
             title_screen.change_active()
 
     def draw(self, screen, font, game):
+        """
+        Prepares the ending screen for displaying.
+
+        Args:
+            screen (pygame.display): screen in which it will be displayed
+
+            font (pygame.font): font which is being used
+
+            game (Game): object of Game class
+        """
         self.background(screen)
         ending_text = font.render('Leaderboard', True, 'Blue')
         ending_text_rect = ending_text.get_rect(center=(

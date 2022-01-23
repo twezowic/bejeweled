@@ -4,6 +4,12 @@ from bejeweled.screens import TitleScreen, MenuScreen, GameScreen, EndingScreen
 
 
 def interface(game):
+    """
+    Shows interface created in screens.py file.
+
+    Args:
+        game (Game): object of Game class
+    """
     pygame.init()
     SCREEN_WIDTH = game.board().width()*50+110
     SCREEN_HEIGHT = game.board().height()*50+10
@@ -49,15 +55,15 @@ def interface(game):
                 elif game_screen.active():
                     game_screen.key_function(
                         event,
-                        game,
-                        ending_screen
+                        ending_screen,
+                        game
                         )
 
                 else:
                     ending_screen.key_function(
                         event,
                         title_screen,
-                        game,
+                        game
                         )
 
             if event.type == pygame.QUIT:

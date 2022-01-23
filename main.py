@@ -5,6 +5,13 @@ import sys
 
 
 def main(args):
+    """
+    Parse arguments and loads leaderboard to Game class.
+    Initialize game and shows the interface screen.
+
+    Args:
+        args (list): list with arguments to be parsed
+    """
     arguments = create_parser(args)
     game = Game(arguments)
     game.leaderboard().load_from_file()
