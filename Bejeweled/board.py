@@ -289,14 +289,14 @@ class Board:
             return False
         if normal and number_of_moves == 0:
             return True
-        for y in range(self.height()):  # wiersze
+        for y in range(self.height()):
             for x in range(self.width() - 1):
                 self.swap_jewels((x, y), (x+1, y))
                 if self.destroying_move():
                     self.swap_jewels((x, y), (x+1, y))
                     return False
                 self.swap_jewels((x, y), (x+1, y))
-        for x in range(self.width()):  # kolumny
+        for x in range(self.width()):
             for y in range(self.height() - 1):
                 self.swap_jewels((x, y), (x, y+1))
                 if self.destroying_move():

@@ -785,7 +785,7 @@ class GameScreen(ScreenMode):
         ))
 
         self.background(screen)
-        for y in range(game.board().height()):  # diamonds
+        for y in range(game.board().height()):
             for x in range(game.board().width()):
                 pygame.draw.polygon(
                     screen,
@@ -795,7 +795,7 @@ class GameScreen(ScreenMode):
 
         if not self.is_game_over() and not self.is_win():
             if not self.is_automatic():
-                pygame.draw.circle(  # ramka
+                pygame.draw.circle(
                     screen,
                     'black',
                     position_on_screen_cursors(self.cursor()),

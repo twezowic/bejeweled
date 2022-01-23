@@ -17,7 +17,6 @@ def interface(game):
     pygame.display.set_caption('Bejeweled')
     clock = pygame.time.Clock()
 
-    # fonts
     font_path = 'Bejeweled/download/Opensans.ttf'
     font = pygame.font.Font(font_path, 12)
     font_title = pygame.font.Font(font_path, 32)
@@ -70,7 +69,6 @@ def interface(game):
                 pygame.quit()
                 exit()
 
-        # drawing
         if title_screen.active():
             title_screen.draw(screen, font_title, jewel)
 
