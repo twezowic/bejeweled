@@ -1,7 +1,7 @@
 from bejeweled.game import Level, Game, is_adjacent
 from bejeweled.game_parser import create_parser
 from bejeweled.leaderboard import Score
-from bejeweled.board import Jewel
+from bejeweled.board import Board, Jewel
 
 
 def test_change_mode():
@@ -135,60 +135,57 @@ def test_is_match_scores():
 def test_destroying_jewels():
     arguments = create_parser([])
     game = Game(arguments)
-    blue = Jewel('blue')
-    red = Jewel('red')
-    green = Jewel('green')
-    blank = Jewel('white')
-    table = [
-        [green, blue, green, blue, green, blue, green, red],
-        [blue, red, blue, green, green, red, green, blue],
-        [blue, green, green, red, blue, green, blue, blue],
-        [blue, blue, red, blue, green, red, green, blue],
-        [blue, blue, green, blue, red, red, green, red],
-        [red, red, blue, red, blue, blue, blue, red],
-        [blue, blue, green, red, red, red, green, red],
-        [green, red, red, red, blue, green, green, green]
-    ]
-    game.board().set_board(table)
+    game.set_board(Board(3, 3, 3, [
+        [Jewel('red'), Jewel('red'), Jewel('green')],
+        [Jewel('red'), Jewel('blue'), Jewel('red')],
+        [Jewel('red'), Jewel('red'), Jewel('red')]
+    ]))
     game.destroying_jewels(False)
-    assert game.board().board() == [
-        [green, blue, green, blue, green, blue, green, red],
-        [blank, red, blue, green, green, red, green, blank],
-        [blank, green, green, red, blue, green, blue, blank],
-        [blank, blue, red, blank, green, red, green, blank],
-        [blank, blue, green, blank, red, red, green, blank],
-        [red, red, blue, red, blank, blank, blank, blank],
-        [blue, blue, green, blank, blank, blank, green, blank],
-        [green, blank, blank, blank, blue, blank, blank, blank]
+    table = [
+        [Jewel('white'), Jewel('red'), Jewel('green')],
+        [Jewel('white'), Jewel('blue'), Jewel('red')],
+        [Jewel('white'), Jewel('white'), Jewel('white')]
     ]
+    for y in range(3):
+        for x in range(3):
+            assert game.board().board()[y][x].is_same_colour(table[y][x])
+    assert game.score().score() == 0
+
+
+def test_destorying_jewels_earning_points():
+    arguments = create_parser([])
+    game = Game(arguments)
+    game.set_board(Board(3, 3, 3, [
+        [Jewel('red'), Jewel('red'), Jewel('green')],
+        [Jewel('red'), Jewel('blue'), Jewel('red')],
+        [Jewel('red'), Jewel('red'), Jewel('red')]
+    ]))
+    game.destroying_jewels(True)
+    table = [
+        [Jewel('white'), Jewel('red'), Jewel('green')],
+        [Jewel('white'), Jewel('blue'), Jewel('red')],
+        [Jewel('white'), Jewel('white'), Jewel('white')]
+    ]
+    for y in range(3):
+        for x in range(3):
+            assert game.board().board()[y][x].is_same_colour(table[y][x])
+    assert game.score().score() == 200
 
 
 def test_destoring_jewels_blank():
     arguments = create_parser([])
     game = Game(arguments)
-    blue = Jewel('blue')
-    red = Jewel('red')
-    green = Jewel('green')
-    blank = Jewel('white')
-    table = [
-        [blank, blue, green, blue, green, blue, green, red],
-        [blue, red, blue, green, green, red, green, blue],
-        [blue, green, green, red, blue, green, blue, blue],
-        [blue, blue, red, blue, green, red, green, blue],
-        [blue, blue, green, blue, red, red, green, red],
-        [red, red, blue, red, blue, blue, blue, red],
-        [blue, blue, green, red, red, red, green, red],
-        [green, red, red, red, blue, green, green, green]
-    ]
-    game.board().set_board(table)
+    game.set_board(Board(3, 3, 3, [
+        [Jewel('white'), Jewel('red'), Jewel('green')],
+        [Jewel('red'), Jewel('blue'), Jewel('red')],
+        [Jewel('red'), Jewel('red'), Jewel('red')]
+    ]))
     game.destroying_jewels(False)
-    assert game.board().board() == [
-        [blank, blue, green, blue, green, blue, green, red],
-        [blue, red, blue, green, green, red, green, blue],
-        [blue, green, green, red, blue, green, blue, blue],
-        [blue, blue, red, blue, green, red, green, blue],
-        [blue, blue, green, blue, red, red, green, red],
-        [red, red, blue, red, blue, blue, blue, red],
-        [blue, blue, green, red, red, red, green, red],
-        [green, red, red, red, blue, green, green, green]
+    table = [
+        [Jewel('white'), Jewel('red'), Jewel('green')],
+        [Jewel('red'), Jewel('blue'), Jewel('red')],
+        [Jewel('red'), Jewel('red'), Jewel('red')]
     ]
+    for y in range(3):
+        for x in range(3):
+            assert game.board().board()[y][x].is_same_colour(table[y][x])

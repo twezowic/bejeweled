@@ -33,6 +33,15 @@ def test_eq_white():
     assert jewel1 != jewel2
 
 
+def test_is_same_colour():
+    jewel1 = Jewel('blue')
+    jewel2 = Jewel('blue')
+    assert jewel1.is_same_colour(jewel2)
+    jewel3 = Jewel('white')
+    jewel4 = Jewel('white')
+    assert jewel3.is_same_colour(jewel4)
+
+
 def test_board_init():
     board = Board(8, 10, 3)
     assert board.width() == 8
@@ -52,183 +61,161 @@ def test_create_board():
 
 
 def test_destroying_move():
-    jewel_blue = Jewel('blue')
-    jewel_red = Jewel('red')
-    jewel_green = Jewel('green')
     table = [
-        [jewel_blue, jewel_blue, jewel_blue],
-        [jewel_blue, jewel_red, jewel_red],
-        [jewel_green, jewel_red, jewel_green]
+        [Jewel('blue'), Jewel('blue'), Jewel('blue')],
+        [Jewel('blue'), Jewel('red'), Jewel('red')],
+        [Jewel('green'), Jewel('red'), Jewel('green')]
     ]
     board = Board(3, 3, 3, table)
     assert board.destroying_move() is True
 
 
 def test_not_destroing_move():
-    jewel_blue = Jewel('blue')
-    jewel_red = Jewel('red')
-    jewel_green = Jewel('green')
     table = [
-        [jewel_red, jewel_blue, jewel_blue],
-        [jewel_blue, jewel_red, jewel_red],
-        [jewel_green, jewel_red, jewel_green]
+        [Jewel('red'), Jewel('blue'), Jewel('blue')],
+        [Jewel('blue'), Jewel('red'), Jewel('red')],
+        [Jewel('green'), Jewel('red'), Jewel('green')]
     ]
     board = Board(3, 3, 3, table)
     assert board.destroying_move() is False
 
 
 def test_swap_jewels():
-    jewel_blue = Jewel('blue')
-    jewel_red = Jewel('red')
-    jewel_green = Jewel('green')
     table = [
-        [jewel_red, jewel_blue, jewel_blue],
-        [jewel_blue, jewel_red, jewel_red],
-        [jewel_green, jewel_red, jewel_green]
+        [Jewel('red'), Jewel('blue'), Jewel('blue')],
+        [Jewel('blue'), Jewel('red'), Jewel('red')],
+        [Jewel('green'), Jewel('red'), Jewel('green')]
     ]
     board = Board(3, 3, 3, table)
     board.swap_jewels([0, 0], [1, 0])
     assert board.board() == [
-        [jewel_blue, jewel_red, jewel_blue],
-        [jewel_blue, jewel_red, jewel_red],
-        [jewel_green, jewel_red, jewel_green]
+        [Jewel('blue'), Jewel('red'), Jewel('blue')],
+        [Jewel('blue'), Jewel('red'), Jewel('red')],
+        [Jewel('green'), Jewel('red'), Jewel('green')]
     ]
 
 
 def test_falling_jewels():
-    jewel_blue = Jewel('blue')
-    jewel_red = Jewel('red')
-    jewel_green = Jewel('green')
-    jewel_blank = Jewel('white')
     table = [
-        [jewel_red, jewel_blue, jewel_blue],
-        [jewel_blue, jewel_blank, jewel_red],
-        [jewel_green, jewel_red, jewel_green]
+        [Jewel('red'), Jewel('blue'), Jewel('blue')],
+        [Jewel('blue'), Jewel('white'), Jewel('red')],
+        [Jewel('green'), Jewel('red'), Jewel('green')]
     ]
     board = Board(3, 3, 3, table)
     board.falling_jewels()
-    assert board.board() == [
-        [jewel_red, jewel_blank, jewel_blue],
-        [jewel_blue, jewel_blue, jewel_red],
-        [jewel_green, jewel_red, jewel_green]
+    assert_table = [
+        [Jewel('red'), Jewel('white'), Jewel('blue')],
+        [Jewel('blue'), Jewel('blue'), Jewel('red')],
+        [Jewel('green'), Jewel('red'), Jewel('green')]
     ]
+    for y in range(3):
+        for x in range(3):
+            assert board.board()[y][x].is_same_colour(assert_table[y][x])
 
 
 def test_new_jewels():
-    jewel_red = Jewel((255, 0, 0))
-    jewel_blank = Jewel('white')
+    red = (255, 0, 0)
     table = [
-        [jewel_red, jewel_blank, jewel_blank],
-        [jewel_red, jewel_red, jewel_red],
-        [jewel_red, jewel_red, jewel_red]
+        [Jewel(red), Jewel('white'), Jewel('white')],
+        [Jewel(red), Jewel(red), Jewel(red)],
+        [Jewel(red), Jewel(red), Jewel(red)]
     ]
     board = Board(3, 3, 1, table)
     board.new_jewels()
-    assert board.board() == [
-        [jewel_red, jewel_red, jewel_red],
-        [jewel_red, jewel_red, jewel_red],
-        [jewel_red, jewel_red, jewel_red]
+    assert_table = [
+        [Jewel(red), Jewel(red), Jewel(red)],
+        [Jewel(red), Jewel(red), Jewel(red)],
+        [Jewel(red), Jewel(red), Jewel(red)]
     ]
+    for y in range(3):
+        for x in range(3):
+            assert board.board()[y][x].is_same_colour(assert_table[y][x])
 
 
 def test_is_blank_with():
-    jewel_blue = Jewel('blue')
-    jewel_red = Jewel('red')
-    jewel_green = Jewel('green')
-    jewel_blank = Jewel('white')
     table = [
-        [jewel_red, jewel_blue, jewel_blue],
-        [jewel_blue, jewel_blank, jewel_red],
-        [jewel_green, jewel_red, jewel_green]
+        [Jewel('red'), Jewel('blue'), Jewel('blue')],
+        [Jewel('blue'), Jewel('white'), Jewel('red')],
+        [Jewel('green'), Jewel('red'), Jewel('green')]
     ]
     board = Board(3, 3, 3, table)
     assert board.is_blank() is True
 
 
 def test_is_blank_without():
-    jewel_blue = Jewel('blue')
-    jewel_red = Jewel('red')
-    jewel_green = Jewel('green')
     table = [
-        [jewel_red, jewel_blue, jewel_blue],
-        [jewel_blue, jewel_red, jewel_red],
-        [jewel_green, jewel_red, jewel_green]
+        [Jewel('red'), Jewel('blue'), Jewel('blue')],
+        [Jewel('blue'), Jewel('red'), Jewel('red')],
+        [Jewel('green'), Jewel('red'), Jewel('green')]
     ]
     board = Board(3, 3, 3, table)
     assert board.is_blank() is False
 
 
 def test_jewel_refill():
-    jewel_red = Jewel((255, 0, 0))
-    jewel_blank = Jewel('white')
+    red = (255, 0, 0)
     table = [
-        [jewel_red, jewel_blank, jewel_blank],
-        [jewel_blank, jewel_blank, jewel_red],
-        [jewel_red, jewel_red, jewel_blank]
+        [Jewel(red), Jewel('white'), Jewel('white')],
+        [Jewel('white'), Jewel('white'), Jewel(red)],
+        [Jewel(red), Jewel(red), Jewel('white')]
     ]
     board = Board(3, 3, 1, table)
     board.jewel_refill()
-    assert board.board() == [
-        [jewel_red, jewel_red, jewel_red],
-        [jewel_red, jewel_blank, jewel_blank],
-        [jewel_red, jewel_red, jewel_red]
+    assert_table_1 = [
+        [Jewel(red), Jewel(red), Jewel(red)],
+        [Jewel(red), Jewel('white'), Jewel('white')],
+        [Jewel(red), Jewel(red), Jewel(red)]
     ]
+    for y in range(3):
+        for x in range(3):
+            assert board.board()[y][x].is_same_colour(assert_table_1[y][x])
+
     board.jewel_refill()
-    assert board.board() == [
-        [jewel_red, jewel_red, jewel_red],
-        [jewel_red, jewel_red, jewel_red],
-        [jewel_red, jewel_red, jewel_red]
+    assert_table_2 = [
+        [Jewel(red), Jewel(red), Jewel(red)],
+        [Jewel(red), Jewel(red), Jewel(red)],
+        [Jewel(red), Jewel(red), Jewel(red)]
     ]
+    for y in range(3):
+        for x in range(3):
+            assert board.board()[y][x].is_same_colour(assert_table_2[y][x])
 
 
 def test_game_over_blank():
-    jewel_blue = Jewel('blue')
-    jewel_red = Jewel('red')
-    jewel_green = Jewel('green')
-    jewel_blank = Jewel('white')
     table = [
-        [jewel_red, jewel_blue, jewel_blue],
-        [jewel_blue, jewel_blank, jewel_red],
-        [jewel_green, jewel_red, jewel_green]
+        [Jewel('red'), Jewel('blue'), Jewel('blue')],
+        [Jewel('blue'), Jewel('white'), Jewel('red')],
+        [Jewel('green'), Jewel('red'), Jewel('green')]
     ]
     board = Board(3, 3, 1, table)
     assert board.game_over() is False
 
 
 def test_game_over_possible_moves():
-    jewel_blue = Jewel('blue')
-    jewel_red = Jewel('red')
-    jewel_green = Jewel('green')
     table = [
-        [jewel_red, jewel_blue, jewel_blue],
-        [jewel_blue, jewel_red, jewel_green],
-        [jewel_green, jewel_red, jewel_green]
+        [Jewel('red'), Jewel('blue'), Jewel('blue')],
+        [Jewel('blue'), Jewel('red'), Jewel('green')],
+        [Jewel('green'), Jewel('red'), Jewel('green')]
     ]
     board = Board(3, 3, 1, table)
     assert board.game_over() is False
 
 
 def test_game_over_no_moves_left():
-    jewel_blue = Jewel('blue')
-    jewel_red = Jewel('red')
-    jewel_green = Jewel('green')
     table = [
-        [jewel_red, jewel_blue, jewel_blue],
-        [jewel_blue, jewel_red, jewel_green],
-        [jewel_green, jewel_red, jewel_green]
+        [Jewel('red'), Jewel('blue'), Jewel('blue')],
+        [Jewel('blue'), Jewel('red'), Jewel('green')],
+        [Jewel('green'), Jewel('red'), Jewel('green')]
     ]
     board = Board(3, 3, 1, table)
     assert board.game_over(True, 0) is True
 
 
 def game_over_no_possible_move():
-    jewel_blue = Jewel('blue')
-    jewel_red = Jewel('red')
-    jewel_green = Jewel('green')
     table = [
-        [jewel_blue, jewel_blue, jewel_red],
-        [jewel_green, jewel_red, jewel_green],
-        [jewel_green, jewel_blue, jewel_green]
+        [Jewel('blue'), Jewel('blue'), Jewel('red')],
+        [Jewel('green'), Jewel('red'), Jewel('green')],
+        [Jewel('green'), Jewel('blue'), Jewel('green')]
     ]
     board = Board(3, 3, 1, table)
     assert board.game_over() is True
